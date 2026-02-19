@@ -346,15 +346,6 @@
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		AA00000A /* Build configuration list for PBXProject "habla-ios" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				AA00000D /* Debug */,
-				AA00000E /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
 		AA000008 /* Build configuration list for PBXNativeTarget "habla-ios" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -364,8 +355,16 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
+		AA00000A /* Build configuration list for PBXProject "habla-ios" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA00000D /* Debug */,
+				AA00000E /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 /* End XCConfigurationList section */
-
 	};
 	rootObject = AA000009 /* Project object */;
 }
