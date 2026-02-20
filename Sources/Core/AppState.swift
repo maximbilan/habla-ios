@@ -33,7 +33,7 @@ struct AppState: Equatable {
     var agentMidCallInput: String = ""
 
     // Settings
-    var serverURL: String = "http://localhost:8000"
+    var serverURL: String = AppConfig.backendURL
 
     // Call history
     var recentCalls: [CallRecord] = []

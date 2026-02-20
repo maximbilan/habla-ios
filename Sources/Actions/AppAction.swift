@@ -72,9 +72,6 @@ enum AppAction: Sendable {
     // Navigation
     case navigateTo(ActiveScreen)
 
-    // Settings
-    case serverURLChanged(String)
-
     // Call history
     case loadCallHistory
     case callHistoryLoaded([CallRecord])

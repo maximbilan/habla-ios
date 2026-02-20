@@ -120,9 +120,6 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .navigateTo(let screen):
         state.activeScreen = screen
 
-    case .serverURLChanged(let url):
-        state.serverURL = url
-
     case .callHistoryLoaded(let calls):
         state.recentCalls = calls
 

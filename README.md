@@ -29,7 +29,11 @@ Redux-like unidirectional data flow with SwiftUI:
 
 2. Open `habla-ios.xcodeproj` in Xcode
 
-3. Set the server URL in Settings to your Mac's local IP (e.g., `http://192.168.1.x:8000`)
+3. Configure backend URL:
+   - Copy `.env.example` to `.env`
+   - Set `HABLA_BACKEND_URL` (example: `http://192.168.1.x:8000`)
+   - For Xcode Cloud, set `HABLA_BACKEND_URL` in workflow environment variables
+   - `ci_scripts/ci_post_clone.sh` generates `Sources/Config/Config.swift` from that value
 
 4. Build and run on a real device (simulator doesn't support microphone)
 
