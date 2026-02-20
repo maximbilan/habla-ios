@@ -12,19 +12,8 @@ struct DialerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Spacer()
-                Button {
-                    store.dispatch(.navigateTo(.settings))
-                } label: {
-                    Image(systemName: "gear")
-                        .font(.system(size: 20))
-                        .foregroundColor(.appTextSecondary)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
+            Color.clear
+                .frame(height: 16)
 
             Spacer()
 
@@ -87,15 +76,6 @@ struct DialerView: View {
                 .disabled(!(state.phoneNumber.count > 4 && state.callStatus == .idle))
             }
             .padding(.bottom, 20)
-
-            // Recent calls
-            RecentCallsView(
-                calls: Array(state.recentCalls.prefix(5)),
-                onCallTapped: { number in
-                    store.dispatch(.phoneNumberChanged(number))
-                }
-            )
-            .frame(maxHeight: 160)
 
             Spacer()
         }
