@@ -22,6 +22,7 @@ struct HablaApp: App {
         self.modelContainer = container
 
         let webSocketService = WebSocketService()
+        let agentWebSocketService = AgentWebSocketService()
         let audioService = AudioService()
 
         let middlewares: [Middleware] = [
@@ -30,6 +31,8 @@ struct HablaApp: App {
             AudioMiddleware(audioService: audioService, webSocketService: webSocketService),
             CallTimerMiddleware(),
             CallHistoryMiddleware(modelContainer: container),
+            AgentNetworkMiddleware(),
+            AgentWebSocketMiddleware(webSocketService: agentWebSocketService),
         ]
 
         _store = StateObject(wrappedValue: Store(middlewares: middlewares))

@@ -60,10 +60,31 @@ struct DialerView: View {
             .padding(.bottom, 20)
 
             // Call button
-            CallButton(
-                isActive: state.phoneNumber.count > 4 && state.callStatus == .idle
-            ) {
-                store.dispatch(.initiateCall(to: state.phoneNumber))
+            HStack(spacing: 18) {
+                CallButton(
+                    isActive: state.phoneNumber.count > 4 && state.callStatus == .idle
+                ) {
+                    store.dispatch(.setCallMode(.translation))
+                    store.dispatch(.initiateCall(to: state.phoneNumber))
+                }
+
+                Button {
+                    let generator = UIImpactFeedbackGenerator(style: .medium)
+                    generator.impactOccurred()
+                    store.dispatch(.setCallMode(.agent))
+                    store.dispatch(.navigateTo(.agentSetup))
+                } label: {
+                    Text("🤖 Agent")
+                        .font(.system(size: 18, weight: .semibold))
+                        .foregroundColor(.white)
+                        .frame(width: 140, height: 56)
+                        .background(
+                            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                                .fill(Color.appAgentAccent)
+                        )
+                        .opacity(state.phoneNumber.count > 4 && state.callStatus == .idle ? 1.0 : 0.5)
+                }
+                .disabled(!(state.phoneNumber.count > 4 && state.callStatus == .idle))
             }
             .padding(.bottom, 20)
 

@@ -12,12 +12,41 @@ enum AppAction: Sendable {
     case phoneNumberChanged(String)
 
     // Call lifecycle actions
+    case setCallMode(CallMode)
     case initiateCall(to: String)
     case callInitiated(callSid: String)
     case callStatusUpdated(CallStatus)
     case callFailed(AppError)
     case endCall
     case callEnded
+
+    // Agent mode actions
+    case agentPromptChanged(String)
+    case agentUserNameChanged(String)
+    case initiateAgentCall(to: String, prompt: String, userName: String)
+    case agentCallInitiated(callSid: String)
+    case agentCallFailed(AppError)
+
+    // Agent transcript
+    case agentTranscriptReceived(TranscriptEntry)
+    case agentTranscriptUpdated(TranscriptEntry)
+    case agentStatusUpdated(AgentStatus)
+
+    // Agent mid-call instructions
+    case agentMidCallInputChanged(String)
+    case sendAgentInstruction(String)
+    case agentInstructionSent
+
+    // Agent end conversation
+    case endAgentConversation(String)
+    case endAgentCall
+    case agentCallEnded
+
+    // Agent WebSocket
+    case connectAgentWebSocket(callSid: String)
+    case agentWebSocketConnected
+    case agentWebSocketDisconnected
+    case agentWebSocketError(AppError)
 
     // Audio actions
     case toggleMute

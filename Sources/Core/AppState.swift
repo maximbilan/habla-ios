@@ -23,6 +23,14 @@ struct AppState: Equatable {
     // UI state
     var dialpadInput: String = ""
     var activeScreen: ActiveScreen = .dialer
+    var callMode: CallMode = .translation
+
+    // Agent mode
+    var agentPrompt: String = ""
+    var agentUserName: String = UserDefaults.standard.string(forKey: "agentUserName") ?? ""
+    var agentTranscript: [TranscriptEntry] = []
+    var agentStatus: AgentStatus = .idle
+    var agentMidCallInput: String = ""
 
     // Settings
     var serverURL: String = "http://localhost:8000"
@@ -44,5 +52,19 @@ enum CallStatus: Equatable, Sendable {
 enum ActiveScreen: Equatable, Sendable {
     case dialer
     case activeCall
+    case agentSetup
+    case agentCall
     case settings
+}
+
+enum CallMode: Equatable, Sendable {
+    case translation
+    case agent
+}
+
+enum AgentStatus: Equatable, Sendable {
+    case idle
+    case listening
+    case speaking
+    case thinking
 }

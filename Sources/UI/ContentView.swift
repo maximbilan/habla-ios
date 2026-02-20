@@ -23,6 +23,12 @@ struct ContentView: View {
                 case .activeCall:
                     ActiveCallView()
                         .transition(.move(edge: .trailing))
+                case .agentSetup:
+                    AgentSetupView()
+                        .transition(.move(edge: .trailing))
+                case .agentCall:
+                    AgentCallView()
+                        .transition(.move(edge: .trailing))
                 case .settings:
                     SettingsView()
                         .transition(.move(edge: .trailing))

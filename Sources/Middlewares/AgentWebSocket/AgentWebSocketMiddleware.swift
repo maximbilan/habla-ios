@@ -1,0 +1,159 @@
+import Foundation
+
+final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
+    private let webSocketService: AgentWebSocketService
+    private var entryIDsByKey: [String: UUID] = [:]
+
+    init(webSocketService: AgentWebSocketService = AgentWebSocketService()) {
+        self.webSocketService = webSocketService
+    }
+
+    func process(action: AppAction, state: AppState, dispatch: @escaping @MainActor (AppAction) -> Void) {
+        switch action {
+        case .connectAgentWebSocket(let callSid):
+            let serverURL = state.serverURL
+            let ws = webSocketService
+
+            Task {
+                do {
+                    try await ws.connect(callSid: callSid, serverURL: serverURL)
+                    await MainActor.run {
+                        dispatch(.agentWebSocketConnected)
+                    }
+
+                    await ws.receiveLoop { [weak self] message in
+                        guard let self else { return }
+                        Task { @MainActor in
+                            self.handleMessage(message, dispatch: dispatch)
+                        }
+                    }
+
+                    await MainActor.run {
+                        dispatch(.agentWebSocketDisconnected)
+                    }
+                } catch {
+                    let appError = (error as? AppError) ?? .webSocketError(error.localizedDescription)
+                    await MainActor.run {
+                        dispatch(.agentWebSocketError(appError))
+                    }
+                }
+            }
+
+        case .sendAgentInstruction(let text):
+            let ws = webSocketService
+            Task {
+                do {
+                    try await ws.sendInstruction(text)
+                    await MainActor.run {
+                        dispatch(.agentInstructionSent)
+                    }
+                } catch {
+                    let appError = (error as? AppError) ?? .webSocketError(error.localizedDescription)
+                    await MainActor.run {
+                        dispatch(.agentWebSocketError(appError))
+                    }
+                }
+            }
+
+        case .endAgentConversation(let text):
+            let ws = webSocketService
+            Task {
+                do {
+                    try await ws.sendEndConversation(text)
+                } catch {
+                    let appError = (error as? AppError) ?? .webSocketError(error.localizedDescription)
+                    await MainActor.run {
+                        dispatch(.agentWebSocketError(appError))
+                    }
+                }
+            }
+
+        case .endAgentCall, .agentCallFailed:
+            let ws = webSocketService
+            Task {
+                await ws.disconnect()
+            }
+
+        default:
+            break
+        }
+    }
+
+    @MainActor
+    private func handleMessage(_ message: AgentWSMessage, dispatch: @escaping @MainActor (AppAction) -> Void) {
+        switch message {
+        case .status(let status):
+            dispatch(.callStatusUpdated(mapCallStatus(status)))
+            if status == "ended" {
+                dispatch(.endAgentCall)
+            }
+
+        case .agentStatus(let status):
+            dispatch(.agentStatusUpdated(mapAgentStatus(status)))
+
+        case .transcript(let role, let textEs, let textEn, let timestamp):
+            let entry = makeEntry(role: role, textEs: textEs, textEn: textEn, timestamp: timestamp)
+            dispatch(.agentTranscriptReceived(entry))
+
+        case .transcriptUpdate(let role, let textEs, let textEn, let timestamp):
+            let entry = makeEntry(role: role, textEs: textEs, textEn: textEn, timestamp: timestamp)
+            dispatch(.agentTranscriptUpdated(entry))
+        }
+    }
+
+    @MainActor
+    private func makeEntry(role: String, textEs: String, textEn: String?, timestamp: String) -> TranscriptEntry {
+        let roleValue = TranscriptRole(rawValue: role) ?? .callee
+        let key = "\(role)|\(timestamp)|\(textEs)"
+        let id = entryIDsByKey[key] ?? {
+            let newID = UUID()
+            entryIDsByKey[key] = newID
+            return newID
+        }()
+
+        return TranscriptEntry(
+            id: id,
+            role: roleValue,
+            textEs: textEs,
+            textEn: textEn,
+            timestamp: parseDate(timestamp)
+        )
+    }
+
+    private func mapCallStatus(_ raw: String) -> CallStatus {
+        switch raw.lowercased() {
+        case "initiating":
+            return .initiating
+        case "connecting":
+            return .connecting
+        case "ringing":
+            return .ringing
+        case "connected", "in_progress":
+            return .connected
+        case "ended", "completed":
+            return .ended
+        case "failed":
+            return .failed("Call failed")
+        default:
+            return .connecting
+        }
+    }
+
+    private func mapAgentStatus(_ raw: String) -> AgentStatus {
+        switch raw.lowercased() {
+        case "listening":
+            return .listening
+        case "speaking":
+            return .speaking
+        case "thinking":
+            return .thinking
+        default:
+            return .idle
+        }
+    }
+
+    private func parseDate(_ value: String) -> Date {
+        let formatter = ISO8601DateFormatter()
+        return formatter.date(from: value) ?? Date()
+    }
+}
