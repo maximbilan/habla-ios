@@ -7,7 +7,6 @@ import SwiftUI
 
 struct SettingsView: View {
     @EnvironmentObject var store: Store
-    @State private var serverURL: String = ""
     @State private var agentUserName: String = ""
 
     private var state: AppState { store.state }
@@ -34,32 +33,6 @@ struct SettingsView: View {
 
             ScrollView {
                 VStack(alignment: .leading, spacing: 24) {
-                    // Server URL section
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Server URL")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.appTextSecondary)
-                            .textCase(.uppercase)
-
-                        TextField("http://localhost:8000", text: $serverURL)
-                            .font(.system(size: 16, design: .monospaced))
-                            .foregroundColor(.appTextPrimary)
-                            .padding(12)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(Color.appSurface)
-                            )
-                            .autocorrectionDisabled()
-                            .textInputAutocapitalization(.never)
-                            .keyboardType(.URL)
-                            .onSubmit {
-                                store.dispatch(.serverURLChanged(serverURL))
-                            }
-                    }
-
-                    Divider()
-                        .background(Color.appSurface)
-
                     // Agent section
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Agent Mode")
@@ -111,7 +84,6 @@ struct SettingsView: View {
         }
         .background(Color.appBackground)
         .onAppear {
-            serverURL = state.serverURL
             agentUserName = state.agentUserName
         }
     }
