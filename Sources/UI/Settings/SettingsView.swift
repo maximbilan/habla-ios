@@ -8,6 +8,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var store: Store
     @State private var serverURL: String = ""
+    @State private var agentUserName: String = ""
 
     private var state: AppState { store.state }
 
@@ -59,6 +60,34 @@ struct SettingsView: View {
                     Divider()
                         .background(Color.appSurface)
 
+                    // Agent section
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Agent Mode")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.appTextSecondary)
+                            .textCase(.uppercase)
+
+                        Text("Your Name")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.appTextSecondary)
+
+                        TextField("Maxim", text: $agentUserName)
+                            .font(.system(size: 16))
+                            .foregroundColor(.appTextPrimary)
+                            .padding(12)
+                            .background(
+                                RoundedRectangle(cornerRadius: 10)
+                                    .fill(Color.appSurface)
+                            )
+                            .onChange(of: agentUserName) { _, newValue in
+                                store.dispatch(.agentUserNameChanged(newValue))
+                                UserDefaults.standard.set(newValue, forKey: "agentUserName")
+                            }
+                    }
+
+                    Divider()
+                        .background(Color.appSurface)
+
                     // About section
                     VStack(alignment: .leading, spacing: 12) {
                         Text("About")
@@ -83,6 +112,7 @@ struct SettingsView: View {
         .background(Color.appBackground)
         .onAppear {
             serverURL = state.serverURL
+            agentUserName = state.agentUserName
         }
     }
 
