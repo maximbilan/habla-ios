@@ -28,6 +28,27 @@ struct DialerView: View {
             }
             .padding(.bottom, 24)
 
+            if let selectedSid = state.callerId.selectedNumberSid,
+               let verified = state.callerId.verifiedNumbers.first(where: { $0.id == selectedSid }) {
+                HStack(spacing: 6) {
+                    Text("Calling as:")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(.appTextSecondary)
+                    Text(verified.phoneNumber)
+                        .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                        .foregroundColor(.appTextPrimary)
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 13))
+                        .foregroundColor(.green)
+                }
+                .padding(.bottom, 10)
+            } else {
+                Text("Calling as: Twilio number")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+                    .padding(.bottom, 10)
+            }
+
             // Phone number display
             Text(state.phoneNumber)
                 .font(.system(size: 32, weight: .light, design: .monospaced))

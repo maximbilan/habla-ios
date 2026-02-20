@@ -7,6 +7,7 @@ import Foundation
 
 struct CallRequest: Codable, Sendable {
     let to: String
+    let from: String?
 }
 
 struct CallResponse: Codable, Sendable {

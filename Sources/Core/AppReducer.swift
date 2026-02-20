@@ -123,6 +123,73 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .callHistoryLoaded(let calls):
         state.recentCalls = calls
 
+    case .callerIdPhoneNumberChanged(let number):
+        state.callerId.phoneNumber = number
+
+    case .callerIdFriendlyNameChanged(let name):
+        state.callerId.friendlyName = name
+
+    case .startCallerIdVerification:
+        state.callerId.isLoading = true
+        state.callerId.error = nil
+        state.callerId.verificationStatus = .verifying
+        state.callerId.validationCode = nil
+
+    case .callerIdVerificationStarted(let code):
+        state.callerId.isLoading = false
+        state.callerId.validationCode = code
+        state.callerId.verificationStatus = .verifying
+
+    case .callerIdVerificationCompleted:
+        state.callerId.isLoading = false
+        state.callerId.verificationStatus = .verified
+        state.callerId.validationCode = nil
+
+    case .callerIdVerificationFailed(let error):
+        state.callerId.isLoading = false
+        state.callerId.verificationStatus = .failed(error.localizedDescription)
+        state.callerId.error = error
+        state.callerId.validationCode = nil
+
+    case .checkCallerIdStatus:
+        state.callerId.isLoading = true
+
+    case .callerIdStatusChecked(let verified):
+        state.callerId.isLoading = false
+        state.callerId.verificationStatus = verified ? .verified : .unverified
+
+    case .loadVerifiedCallerIds:
+        state.callerId.isLoading = true
+        state.callerId.error = nil
+
+    case .verifiedCallerIdsLoaded(let ids):
+        state.callerId.isLoading = false
+        state.callerId.verifiedNumbers = ids
+        if let selectedSid = state.callerId.selectedNumberSid,
+           !ids.contains(where: { $0.id == selectedSid }) {
+            state.callerId.selectedNumberSid = nil
+        }
+        if state.callerId.selectedNumberSid == nil, let first = ids.first {
+            state.callerId.selectedNumberSid = first.id
+        }
+
+    case .selectCallerId(let sid):
+        state.callerId.selectedNumberSid = sid
+
+    case .deleteCallerId:
+        state.callerId.isLoading = true
+        state.callerId.error = nil
+
+    case .callerIdDeleted(let sid):
+        state.callerId.isLoading = false
+        state.callerId.verifiedNumbers.removeAll { $0.id == sid }
+        if state.callerId.selectedNumberSid == sid {
+            state.callerId.selectedNumberSid = state.callerId.verifiedNumbers.first?.id
+        }
+
+    case .clearCallerIdError:
+        state.callerId.error = nil
+
     case .clearError:
         state.callError = nil
 
