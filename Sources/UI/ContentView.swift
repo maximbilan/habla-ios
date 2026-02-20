@@ -9,6 +9,23 @@ struct ContentView: View {
     @EnvironmentObject var store: Store
 
     private var state: AppState { store.state }
+    private var tabSelection: Binding<ActiveScreen> {
+        Binding(
+            get: {
+                switch state.activeScreen {
+                case .callHistory:
+                    return .callHistory
+                case .settings:
+                    return .settings
+                default:
+                    return .dialer
+                }
+            },
+            set: { selected in
+                store.dispatch(.navigateTo(selected))
+            }
+        )
+    }
 
     var body: some View {
         ZStack {
@@ -17,12 +34,6 @@ struct ContentView: View {
 
             Group {
                 switch state.activeScreen {
-                case .dialer:
-                    DialerView()
-                        .transition(.move(edge: .leading))
-                case .callHistory:
-                    CallHistoryView()
-                        .transition(.move(edge: .trailing))
                 case .activeCall:
                     ActiveCallView()
                         .transition(.move(edge: .trailing))
@@ -32,9 +43,31 @@ struct ContentView: View {
                 case .agentCall:
                     AgentCallView()
                         .transition(.move(edge: .trailing))
-                case .settings:
-                    SettingsView()
-                        .transition(.move(edge: .trailing))
+                case .dialer, .callHistory, .settings:
+                    TabView(selection: tabSelection) {
+                        DialerView()
+                            .tabItem {
+                                Image(systemName: "phone.fill")
+                                Text("Phone")
+                            }
+                            .tag(ActiveScreen.dialer)
+
+                        CallHistoryView()
+                            .tabItem {
+                                Image(systemName: "clock.arrow.circlepath")
+                                Text("History")
+                            }
+                            .tag(ActiveScreen.callHistory)
+
+                        SettingsView()
+                            .tabItem {
+                                Image(systemName: "gearshape.fill")
+                                Text("Settings")
+                            }
+                            .tag(ActiveScreen.settings)
+                    }
+                    .tint(.appAccent)
+                    .transition(.opacity)
                 }
             }
             .animation(.easeInOut(duration: 0.3), value: state.activeScreen)

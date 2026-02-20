@@ -12,30 +12,8 @@ struct DialerView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            // Header
-            HStack {
-                Button {
-                    store.dispatch(.navigateTo(.callHistory))
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "clock.arrow.circlepath")
-                        Text("History")
-                    }
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(.appTextSecondary)
-                }
-
-                Spacer()
-                Button {
-                    store.dispatch(.navigateTo(.settings))
-                } label: {
-                    Image(systemName: "gear")
-                        .font(.system(size: 20))
-                        .foregroundColor(.appTextSecondary)
-                }
-            }
-            .padding(.horizontal, 20)
-            .padding(.top, 8)
+            Color.clear
+                .frame(height: 16)
 
             Spacer()
 

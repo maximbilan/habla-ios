@@ -15,17 +15,9 @@ struct SettingsView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
-                Button {
-                    store.dispatch(.navigateTo(.dialer))
-                } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chevron.left")
-                        Text("Back")
-                    }
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(.appAccent)
-                }
-
+                Text("Settings")
+                    .font(.system(size: 18, weight: .semibold))
+                    .foregroundColor(.appTextPrimary)
                 Spacer()
             }
             .padding(.horizontal, 20)

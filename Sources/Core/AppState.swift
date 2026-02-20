@@ -49,7 +49,7 @@ enum CallStatus: Equatable, Sendable {
     case failed(String)
 }
 
-enum ActiveScreen: Equatable, Sendable {
+enum ActiveScreen: Equatable, Hashable, Sendable {
     case dialer
     case callHistory
     case activeCall
