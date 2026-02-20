@@ -77,6 +77,22 @@ enum AppAction: Sendable {
     case callHistoryLoaded([CallRecord])
     case saveCallRecord(CallRecord)
 
+    // Caller ID actions
+    case callerIdPhoneNumberChanged(String)
+    case callerIdFriendlyNameChanged(String)
+    case startCallerIdVerification
+    case callerIdVerificationStarted(validationCode: String)
+    case callerIdVerificationCompleted
+    case callerIdVerificationFailed(AppError)
+    case checkCallerIdStatus
+    case callerIdStatusChecked(verified: Bool)
+    case loadVerifiedCallerIds
+    case verifiedCallerIdsLoaded([VerifiedCallerId])
+    case selectCallerId(String?)
+    case deleteCallerId(String)
+    case callerIdDeleted(String)
+    case clearCallerIdError
+
     // Error handling
     case clearError
 }

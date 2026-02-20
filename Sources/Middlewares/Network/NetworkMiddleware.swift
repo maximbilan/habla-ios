@@ -16,9 +16,14 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
         switch action {
         case .initiateCall(let phoneNumber):
             let serverURL = state.serverURL
+            let fromNumber = resolveCallerId(state: state)
             Task {
                 do {
-                    let response = try await networkService.initiateCall(to: phoneNumber, serverURL: serverURL)
+                    let response = try await networkService.initiateCall(
+                        to: phoneNumber,
+                        from: fromNumber,
+                        serverURL: serverURL
+                    )
                     await MainActor.run {
                         dispatch(.callInitiated(callSid: response.call_sid))
                         dispatch(.connectWebSocket(callSid: response.call_sid))
@@ -59,5 +64,10 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
         default:
             break
         }
+    }
+
+    private func resolveCallerId(state: AppState) -> String? {
+        guard let selectedSid = state.callerId.selectedNumberSid else { return nil }
+        return state.callerId.verifiedNumbers.first { $0.id == selectedSid }?.phoneNumber
     }
 }

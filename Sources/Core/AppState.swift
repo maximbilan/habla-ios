@@ -35,8 +35,34 @@ struct AppState: Equatable {
     // Settings
     var serverURL: String = AppConfig.backendURL
 
+    // Caller ID
+    var callerId: CallerIdState = CallerIdState(
+        selectedNumberSid: UserDefaults.standard.string(forKey: CallerIdState.selectedCallerIdKey)
+    )
+
     // Call history
     var recentCalls: [CallRecord] = []
+}
+
+struct CallerIdState: Equatable, Sendable {
+    static let selectedCallerIdKey = "selectedCallerIdSid"
+
+    var phoneNumber: String = "+34"
+    var friendlyName: String = ""
+    var verificationStatus: CallerIdVerificationStatus = .unknown
+    var validationCode: String? = nil
+    var verifiedNumbers: [VerifiedCallerId] = []
+    var selectedNumberSid: String? = nil
+    var isLoading: Bool = false
+    var error: AppError? = nil
+}
+
+enum CallerIdVerificationStatus: Equatable, Sendable {
+    case unknown
+    case unverified
+    case verifying
+    case verified
+    case failed(String)
 }
 
 enum CallStatus: Equatable, Sendable {

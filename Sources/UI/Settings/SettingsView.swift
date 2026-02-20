@@ -8,6 +8,7 @@ import SwiftUI
 struct SettingsView: View {
     @EnvironmentObject var store: Store
     @State private var agentUserName: String = ""
+    @State private var isPresentingAddCallerId = false
 
     private var state: AppState { store.state }
 
@@ -53,6 +54,35 @@ struct SettingsView: View {
                     Divider()
                         .background(Color.appSurface)
 
+                    // Caller ID section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Caller ID")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.appTextSecondary)
+                            .textCase(.uppercase)
+
+                        Text("Your phone number")
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.appTextSecondary)
+
+                        Text("When set, call recipients see your real number instead of an unknown number.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.appTextSecondary)
+
+                        callerIdListSection
+
+                        Button {
+                            isPresentingAddCallerId = true
+                        } label: {
+                            Text("+ Add new number")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(.appAccent)
+                        }
+                    }
+
+                    Divider()
+                        .background(Color.appSurface)
+
                     // About section
                     VStack(alignment: .leading, spacing: 12) {
                         Text("About")
@@ -77,6 +107,11 @@ struct SettingsView: View {
         .background(Color.appBackground)
         .onAppear {
             agentUserName = state.agentUserName
+            store.dispatch(.loadVerifiedCallerIds)
+        }
+        .sheet(isPresented: $isPresentingAddCallerId) {
+            CallerIdSettingsView()
+                .environmentObject(store)
         }
     }
 
@@ -91,5 +126,88 @@ struct SettingsView: View {
                 .foregroundColor(.appTextPrimary)
         }
         .padding(.vertical, 4)
+    }
+
+    @ViewBuilder
+    private var callerIdListSection: some View {
+        if state.callerId.isLoading && state.callerId.verifiedNumbers.isEmpty {
+            ProgressView()
+                .tint(.appAccent)
+                .frame(maxWidth: .infinity, alignment: .leading)
+        } else {
+            VStack(spacing: 8) {
+                ForEach(state.callerId.verifiedNumbers) { callerId in
+                    HStack(spacing: 10) {
+                        Image(systemName: state.callerId.selectedNumberSid == callerId.id ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(state.callerId.selectedNumberSid == callerId.id ? .green : .appTextSecondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(callerId.phoneNumber)
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.appTextPrimary)
+                            if let friendlyName = callerId.friendlyName, !friendlyName.isEmpty {
+                                Text(friendlyName)
+                                    .font(.system(size: 13))
+                                    .foregroundColor(.appTextSecondary)
+                            }
+                        }
+                        Spacer()
+                        Button(role: .destructive) {
+                            store.dispatch(.deleteCallerId(callerId.id))
+                        } label: {
+                            Image(systemName: "trash")
+                                .font(.system(size: 14, weight: .semibold))
+                                .foregroundColor(.red)
+                        }
+                    }
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        store.dispatch(.selectCallerId(callerId.id))
+                    }
+                    .swipeActions(edge: .trailing, allowsFullSwipe: true) {
+                        Button(role: .destructive) {
+                            store.dispatch(.deleteCallerId(callerId.id))
+                        } label: {
+                            Label("Delete", systemImage: "trash")
+                        }
+                    }
+                }
+
+                Button {
+                    store.dispatch(.selectCallerId(nil))
+                } label: {
+                    HStack(spacing: 10) {
+                        Image(systemName: state.callerId.selectedNumberSid == nil ? "checkmark.circle.fill" : "circle")
+                            .foregroundColor(state.callerId.selectedNumberSid == nil ? .green : .appTextSecondary)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Use Twilio number")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.appTextPrimary)
+                            Text("Default outbound caller ID")
+                                .font(.system(size: 13))
+                                .foregroundColor(.appTextSecondary)
+                        }
+                        Spacer()
+                    }
+                    .padding(12)
+                    .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
+                }
+            }
+        }
+
+        if let error = state.callerId.error {
+            HStack(alignment: .top, spacing: 8) {
+                Text(error.localizedDescription)
+                    .font(.system(size: 13))
+                    .foregroundColor(.red)
+                Spacer()
+                Button("Clear") {
+                    store.dispatch(.clearCallerIdError)
+                }
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.appTextSecondary)
+            }
+        }
     }
 }

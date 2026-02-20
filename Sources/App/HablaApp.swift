@@ -33,6 +33,7 @@ struct HablaApp: App {
             CallHistoryMiddleware(modelContainer: container),
             AgentNetworkMiddleware(),
             AgentWebSocketMiddleware(webSocketService: agentWebSocketService),
+            CallerIdMiddleware(),
         ]
 
         _store = StateObject(wrappedValue: Store(middlewares: middlewares))

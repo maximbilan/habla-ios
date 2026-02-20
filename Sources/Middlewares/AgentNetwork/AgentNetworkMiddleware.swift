@@ -11,12 +11,13 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
         switch action {
         case .initiateAgentCall(let phoneNumber, let prompt, let userName):
             let serverURL = state.serverURL
+            let fromNumber = resolveCallerId(state: state)
 
             Task {
                 do {
                     let response = try await networkService.initiateAgentCall(
                         to: phoneNumber,
-                        from: nil,
+                        from: fromNumber,
                         prompt: prompt,
                         userName: userName,
                         language: "es",
@@ -70,5 +71,10 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
         default:
             break
         }
+    }
+
+    private func resolveCallerId(state: AppState) -> String? {
+        guard let selectedSid = state.callerId.selectedNumberSid else { return nil }
+        return state.callerId.verifiedNumbers.first { $0.id == selectedSid }?.phoneNumber
     }
 }
