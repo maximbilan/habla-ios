@@ -14,6 +14,17 @@ struct DialerView: View {
         VStack(spacing: 0) {
             // Header
             HStack {
+                Button {
+                    store.dispatch(.navigateTo(.callHistory))
+                } label: {
+                    HStack(spacing: 6) {
+                        Image(systemName: "clock.arrow.circlepath")
+                        Text("History")
+                    }
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+                }
+
                 Spacer()
                 Button {
                     store.dispatch(.navigateTo(.settings))
@@ -87,15 +98,6 @@ struct DialerView: View {
                 .disabled(!(state.phoneNumber.count > 4 && state.callStatus == .idle))
             }
             .padding(.bottom, 20)
-
-            // Recent calls
-            RecentCallsView(
-                calls: Array(state.recentCalls.prefix(5)),
-                onCallTapped: { number in
-                    store.dispatch(.phoneNumberChanged(number))
-                }
-            )
-            .frame(maxHeight: 160)
 
             Spacer()
         }

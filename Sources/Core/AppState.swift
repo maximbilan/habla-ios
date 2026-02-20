@@ -51,6 +51,7 @@ enum CallStatus: Equatable, Sendable {
 
 enum ActiveScreen: Equatable, Sendable {
     case dialer
+    case callHistory
     case activeCall
     case agentSetup
     case agentCall

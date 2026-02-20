@@ -20,6 +20,9 @@ struct ContentView: View {
                 case .dialer:
                     DialerView()
                         .transition(.move(edge: .leading))
+                case .callHistory:
+                    CallHistoryView()
+                        .transition(.move(edge: .trailing))
                 case .activeCall:
                     ActiveCallView()
                         .transition(.move(edge: .trailing))
