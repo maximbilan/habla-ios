@@ -7,11 +7,23 @@ struct AgentSetupView: View {
 
     private var state: AppState { store.state }
 
-    private let suggestions: [String] = [
-        "Ask about business hours and whether appointments are required.",
-        "Schedule an appointment for next week and ask what documents I need.",
-        "Ask about pricing and monthly fees.",
-        "Request general information and next steps.",
+    private let suggestions: [AgentPromptSuggestion] = [
+        .init(
+            title: "Hours & appointments",
+            prompt: "Call the business and politely ask for their operating hours, whether appointments are required, and whether walk-ins are accepted. If appointments are required, ask what openings are usually available in the next week."
+        ),
+        .init(
+            title: "Schedule next week",
+            prompt: "Call to request an appointment for next week. Ask what documents or information they need from me before confirming the booking, and ask them to repeat the confirmed date and time clearly."
+        ),
+        .init(
+            title: "Pricing details",
+            prompt: "Call and ask for full pricing details, including any setup costs, monthly fees, and what is included in each plan. Ask whether there are discounts, promotions, or contract commitments."
+        ),
+        .init(
+            title: "General info & next steps",
+            prompt: "Call to request a clear overview of the service and the exact next steps to get started. Ask what I should do first, what information they need from me, and how long the process usually takes."
+        )
     ]
 
     var body: some View {
@@ -87,12 +99,12 @@ struct AgentSetupView: View {
                             .foregroundColor(.appTextSecondary)
                             .textCase(.uppercase)
 
-                        ForEach(suggestions, id: \.self) { suggestion in
+                        ForEach(suggestions) { suggestion in
                             Button {
-                                promptText = suggestion
-                                store.dispatch(.agentPromptChanged(suggestion))
+                                promptText = suggestion.prompt
+                                store.dispatch(.agentPromptChanged(suggestion.prompt))
                             } label: {
-                                Text(suggestion)
+                                Text(suggestion.title)
                                     .font(.system(size: 14, weight: .medium))
                                     .foregroundColor(.appTextPrimary)
                                     .multilineTextAlignment(.leading)
@@ -139,4 +151,11 @@ struct AgentSetupView: View {
             userName = state.agentUserName
         }
     }
+}
+
+private struct AgentPromptSuggestion: Identifiable {
+    let title: String
+    let prompt: String
+
+    var id: String { title }
 }
