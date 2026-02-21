@@ -17,10 +17,6 @@ struct CallResponse: Codable, Sendable {
     let status: String
 }
 
-struct CallEndResponse: Codable, Sendable {
-    let status: String
-}
-
 struct CallStatusResponse: Codable, Sendable {
     let call_sid: String
     let status: String
@@ -37,17 +33,4 @@ struct AgentCallRequest: Codable, Sendable {
 struct AgentCallResponse: Codable, Sendable {
     let call_sid: String
     let status: String
-}
-
-struct AgentCallStatusResponse: Codable, Sendable {
-    let call_sid: String
-    let status: String
-    let transcript: [AgentTranscriptPayload]
-}
-
-struct AgentTranscriptPayload: Codable, Sendable {
-    let role: String
-    let text_es: String
-    let text_en: String?
-    let timestamp: String
 }

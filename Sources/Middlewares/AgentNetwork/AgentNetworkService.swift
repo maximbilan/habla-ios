@@ -34,12 +34,9 @@ actor AgentNetworkService {
         )
 
         let (data, response) = try await session.data(for: request)
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AppError.networkError("Invalid response")
-        }
+        let httpResponse = try validatedHTTPResponse(response)
         guard (200...299).contains(httpResponse.statusCode) else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw AppError.networkError("Server error (\(httpResponse.statusCode)): \(body)")
+            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Server error"))
         }
 
         return try JSONDecoder().decode(AgentCallResponse.self, from: data)
@@ -54,13 +51,21 @@ actor AgentNetworkService {
         request.httpMethod = "POST"
         request.timeoutInterval = 15
 
-        let (data, response) = try await session.data(for: request)
+        let (_, response) = try await session.data(for: request)
+        let httpResponse = try validatedHTTPResponse(response)
+        guard (200...299).contains(httpResponse.statusCode) else {
+            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Failed to end agent call"))
+        }
+    }
+
+    private func validatedHTTPResponse(_ response: URLResponse) throws -> HTTPURLResponse {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AppError.networkError("Invalid response")
         }
-        guard (200...299).contains(httpResponse.statusCode) else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw AppError.networkError("Failed to end agent call (\(httpResponse.statusCode)): \(body)")
-        }
+        return httpResponse
+    }
+
+    private func serverErrorMessage(statusCode: Int, fallback: String) -> String {
+        "\(fallback) (\(statusCode))"
     }
 }

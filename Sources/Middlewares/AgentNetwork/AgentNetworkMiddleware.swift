@@ -54,7 +54,6 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                 do {
                     try await networkService.endAgentCall(callSid: callSid, serverURL: serverURL)
                 } catch {
-                    print("[AgentNetworkMiddleware] End call error: \(error)")
                 }
 
                 let record = CallRecord(

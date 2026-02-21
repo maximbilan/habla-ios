@@ -28,7 +28,7 @@ actor CallerIdService {
         request.httpBody = try JSONEncoder().encode(payload)
 
         let (data, response) = try await session.data(for: request)
-        try validateHTTPResponse(response, data: data)
+        try validateHTTPResponse(response)
         return try JSONDecoder().decode(CallerIdVerifyResponse.self, from: data)
     }
 
@@ -43,7 +43,7 @@ actor CallerIdService {
         request.timeoutInterval = 15
 
         let (data, response) = try await session.data(for: request)
-        try validateHTTPResponse(response, data: data)
+        try validateHTTPResponse(response)
         return try JSONDecoder().decode(CallerIdStatusResponse.self, from: data)
     }
 
@@ -57,7 +57,7 @@ actor CallerIdService {
         request.timeoutInterval = 20
 
         let (data, response) = try await session.data(for: request)
-        try validateHTTPResponse(response, data: data)
+        try validateHTTPResponse(response)
         return try JSONDecoder().decode(CallerIdListResponse.self, from: data)
     }
 
@@ -70,18 +70,17 @@ actor CallerIdService {
         request.httpMethod = "DELETE"
         request.timeoutInterval = 20
 
-        let (data, response) = try await session.data(for: request)
-        try validateHTTPResponse(response, data: data)
+        let (_, response) = try await session.data(for: request)
+        try validateHTTPResponse(response)
     }
 
-    private func validateHTTPResponse(_ response: URLResponse, data: Data) throws {
+    private func validateHTTPResponse(_ response: URLResponse) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AppError.networkError("Invalid response")
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw AppError.networkError("Server error (\(httpResponse.statusCode)): \(body)")
+            throw AppError.networkError("Server error (\(httpResponse.statusCode))")
         }
     }
 }

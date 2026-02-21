@@ -51,7 +51,6 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
                 do {
                     try await networkService.endCall(callSid: callSid, serverURL: serverURL)
                 } catch {
-                    print("[NetworkMiddleware] End call error: \(error)")
                 }
 
                 let record = CallRecord(
