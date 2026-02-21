@@ -8,8 +8,6 @@ import Foundation
 final class WebSocketMiddleware: Middleware, @unchecked Sendable {
     private let webSocketService: WebSocketService
     private let audioService: AudioService
-    private var receiveTask: Task<Void, Never>?
-    private let maxRetries = 3
 
     init(webSocketService: WebSocketService = WebSocketService(), audioService: AudioService = AudioService()) {
         self.webSocketService = webSocketService
@@ -68,13 +66,5 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
         default:
             break
         }
-    }
-
-    func getWebSocketService() -> WebSocketService {
-        webSocketService
-    }
-
-    func getAudioService() -> AudioService {
-        audioService
     }
 }

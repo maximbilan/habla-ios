@@ -16,10 +16,6 @@ final class Store: ObservableObject {
     }
 
     func dispatch(_ action: AppAction) {
-        #if DEBUG
-        print("[Action] \(action)")
-        #endif
-
         for middleware in middlewares {
             middleware.process(action: action, state: state, dispatch: dispatch)
         }

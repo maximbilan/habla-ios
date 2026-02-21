@@ -8,7 +8,6 @@ import Foundation
 actor WebSocketService {
     private var webSocketTask: URLSessionWebSocketTask?
     private var isConnected: Bool = false
-    private var receiveTask: Task<Void, Never>?
 
     func connect(callSid: String, serverURL: String) async throws {
         let wsURL = serverURL
@@ -26,8 +25,6 @@ actor WebSocketService {
     }
 
     func disconnect() async {
-        receiveTask?.cancel()
-        receiveTask = nil
         webSocketTask?.cancel(with: .goingAway, reason: nil)
         webSocketTask = nil
         isConnected = false
@@ -61,9 +58,5 @@ actor WebSocketService {
                 break
             }
         }
-    }
-
-    var connected: Bool {
-        isConnected
     }
 }

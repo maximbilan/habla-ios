@@ -8,6 +8,8 @@ import SwiftData
 
 final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
     private let modelContainer: ModelContainer
+    private let maxStoredRecords = 200
+    private let retentionDays = 30
 
     init(modelContainer: ModelContainer) {
         self.modelContainer = modelContainer
@@ -20,14 +22,14 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
             Task { @MainActor in
                 do {
                     let context = container.mainContext
+                    try pruneHistory(context: context)
                     let descriptor = FetchDescriptor<CallRecordModel>(
                         sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
                     )
                     let models = try context.fetch(descriptor)
-                    let records = models.map { $0.toCallRecord() }
+                    let records = models.prefix(maxStoredRecords).map { $0.toCallRecord() }
                     dispatch(.callHistoryLoaded(records))
                 } catch {
-                    print("[CallHistoryMiddleware] Load error: \(error)")
                 }
             }
 
@@ -47,12 +49,34 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                     try context.save()
                     dispatch(.loadCallHistory)
                 } catch {
-                    print("[CallHistoryMiddleware] Save error: \(error)")
                 }
             }
 
         default:
             break
+        }
+    }
+
+    @MainActor
+    private func pruneHistory(context: ModelContext) throws {
+        let descriptor = FetchDescriptor<CallRecordModel>(
+            sortBy: [SortDescriptor(\.startedAt, order: .reverse)]
+        )
+        let models = try context.fetch(descriptor)
+        let cutoffDate = Calendar.current.date(byAdding: .day, value: -retentionDays, to: Date()) ?? .distantPast
+
+        var deleted = false
+        for (index, model) in models.enumerated() {
+            let isExpired = model.startedAt < cutoffDate
+            let exceedsMax = index >= maxStoredRecords
+            if isExpired || exceedsMax {
+                context.delete(model)
+                deleted = true
+            }
+        }
+
+        if deleted {
+            try context.save()
         }
     }
 }

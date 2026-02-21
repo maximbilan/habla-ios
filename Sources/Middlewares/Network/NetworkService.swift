@@ -37,14 +37,10 @@ actor NetworkService {
         request.timeoutInterval = 30
 
         let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AppError.networkError("Invalid response")
-        }
+        let httpResponse = try validatedHTTPResponse(response)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw AppError.networkError("Server error (\(httpResponse.statusCode)): \(body)")
+            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Server error"))
         }
 
         return try JSONDecoder().decode(CallResponse.self, from: data)
@@ -59,15 +55,11 @@ actor NetworkService {
         request.httpMethod = "POST"
         request.timeoutInterval = 15
 
-        let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AppError.networkError("Invalid response")
-        }
+        let (_, response) = try await session.data(for: request)
+        let httpResponse = try validatedHTTPResponse(response)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw AppError.networkError("Failed to end call (\(httpResponse.statusCode)): \(body)")
+            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Failed to end call"))
         }
     }
 
@@ -81,16 +73,23 @@ actor NetworkService {
         request.timeoutInterval = 10
 
         let (data, response) = try await session.data(for: request)
-
-        guard let httpResponse = response as? HTTPURLResponse else {
-            throw AppError.networkError("Invalid response")
-        }
+        let httpResponse = try validatedHTTPResponse(response)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            let body = String(data: data, encoding: .utf8) ?? "Unknown error"
-            throw AppError.networkError("Status check failed (\(httpResponse.statusCode)): \(body)")
+            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Status check failed"))
         }
 
         return try JSONDecoder().decode(CallStatusResponse.self, from: data)
+    }
+
+    private func validatedHTTPResponse(_ response: URLResponse) throws -> HTTPURLResponse {
+        guard let httpResponse = response as? HTTPURLResponse else {
+            throw AppError.networkError("Invalid response")
+        }
+        return httpResponse
+    }
+
+    private func serverErrorMessage(statusCode: Int, fallback: String) -> String {
+        "\(fallback) (\(statusCode))"
     }
 }

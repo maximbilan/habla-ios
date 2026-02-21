@@ -172,8 +172,14 @@ struct SupportedTranslationLanguage: Equatable, Sendable, Identifiable {
     let localeLabel: String
 
     var id: String { code }
+    var languageCode: String { code.split(separator: "-").first.map(String.init)?.lowercased() ?? "" }
     var regionCode: String { code.split(separator: "-").last.map(String.init) ?? "" }
-    var flagEmoji: String { emojiFlag(forRegionCode: regionCode) }
+    var flagEmoji: String {
+        if languageCode == "es" {
+            return emojiFlag(forRegionCode: "ES")
+        }
+        return emojiFlag(forRegionCode: regionCode)
+    }
     var label: String {
         if localeLabel.isEmpty {
             return name

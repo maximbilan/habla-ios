@@ -64,6 +64,8 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callSid = nil
         state.activeScreen = .dialer
         state.agentStatus = .idle
+        state.agentTranscript = []
+        state.agentMidCallInput = ""
 
     case .agentPromptChanged(let text):
         state.agentPrompt = text
@@ -123,6 +125,8 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callSid = nil
         state.agentStatus = .idle
         state.activeScreen = .dialer
+        state.agentTranscript = []
+        state.agentMidCallInput = ""
 
     case .toggleMute:
         state.isMuted.toggle()
