@@ -6,6 +6,9 @@ struct CallerIdSettingsView: View {
     @State private var isShowingVerification = false
 
     private var state: AppState { store.state }
+    private var selectedCountry: PhoneCountry {
+        PhoneCountryCatalog.country(isoCode: state.callerId.selectedCountryCode) ?? PhoneCountryCatalog.defaultCountry
+    }
 
     private var isVerifyDisabled: Bool {
         state.callerId.phoneNumber.trimmingCharacters(in: .whitespacesAndNewlines).count < 6 || state.callerId.isLoading
@@ -27,7 +30,28 @@ struct CallerIdSettingsView: View {
                         .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.appTextSecondary)
 
-                    TextField("+34", text: phoneNumberBinding)
+                    Menu {
+                        ForEach(PhoneCountryCatalog.countries) { country in
+                            Button(country.label) {
+                                store.dispatch(.callerIdCountryChanged(country.isoCode))
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(selectedCountry.name)
+                                .font(.system(size: 14, weight: .medium))
+                            Text(selectedCountry.dialCode)
+                                .font(.system(size: 14, weight: .semibold, design: .monospaced))
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 11, weight: .semibold))
+                        }
+                        .foregroundColor(.appTextPrimary)
+                        .padding(12)
+                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
+                    }
+
+                    TextField(selectedCountry.dialCode, text: phoneNumberBinding)
                         .keyboardType(.phonePad)
                         .textInputAutocapitalization(.never)
                         .autocorrectionDisabled()
@@ -100,7 +124,7 @@ struct CallerIdSettingsView: View {
         }
         .onAppear {
             if state.callerId.phoneNumber.isEmpty {
-                store.dispatch(.callerIdPhoneNumberChanged("+34"))
+                store.dispatch(.callerIdPhoneNumberChanged(selectedCountry.dialCode))
             }
         }
         .onChange(of: state.callerId.validationCode) { _, newValue in

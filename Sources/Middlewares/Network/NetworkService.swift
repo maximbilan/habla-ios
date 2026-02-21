@@ -12,7 +12,13 @@ actor NetworkService {
         self.session = session
     }
 
-    func initiateCall(to phoneNumber: String, from: String?, serverURL: String) async throws -> CallResponse {
+    func initiateCall(
+        to phoneNumber: String,
+        from: String?,
+        sourceLanguage: String,
+        targetLanguage: String,
+        serverURL: String
+    ) async throws -> CallResponse {
         guard let url = URL(string: "\(serverURL)/call") else {
             throw AppError.networkError("Invalid server URL")
         }
@@ -20,7 +26,14 @@ actor NetworkService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.httpBody = try JSONEncoder().encode(CallRequest(to: phoneNumber, from: from))
+        request.httpBody = try JSONEncoder().encode(
+            CallRequest(
+                to: phoneNumber,
+                from: from,
+                source_language: sourceLanguage,
+                target_language: targetLanguage
+            )
+        )
         request.timeoutInterval = 30
 
         let (data, response) = try await session.data(for: request)

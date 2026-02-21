@@ -10,6 +10,7 @@ enum AppAction: Sendable {
     case dialpadDigitPressed(String)
     case dialpadBackspace
     case phoneNumberChanged(String)
+    case dialCountryChanged(String)
 
     // Call lifecycle actions
     case setCallMode(CallMode)
@@ -79,6 +80,7 @@ enum AppAction: Sendable {
 
     // Caller ID actions
     case callerIdPhoneNumberChanged(String)
+    case callerIdCountryChanged(String)
     case callerIdFriendlyNameChanged(String)
     case startCallerIdVerification
     case callerIdVerificationStarted(validationCode: String)
@@ -92,6 +94,10 @@ enum AppAction: Sendable {
     case deleteCallerId(String)
     case callerIdDeleted(String)
     case clearCallerIdError
+
+    // Translation settings
+    case translationSourceLanguageChanged(String)
+    case translationTargetLanguageChanged(String)
 
     // Error handling
     case clearError
