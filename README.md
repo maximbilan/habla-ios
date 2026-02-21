@@ -29,11 +29,14 @@ Redux-like unidirectional data flow with SwiftUI:
 
 2. Open `habla-ios.xcodeproj` in Xcode
 
-3. Configure backend URL:
+3. Configure backend URL and optional request auth token generation:
    - Copy `.env.example` to `.env`
    - Set `HABLA_BACKEND_URL` (example: `http://192.168.1.x:8000`)
-   - For Xcode Cloud, set `HABLA_BACKEND_URL` in workflow environment variables
-   - `ci_scripts/ci_post_clone.sh` generates `Sources/Config/Config.swift` from that value
+   - Optional but recommended for protected backend routes:
+     - Set `HABLA_SECRET`
+     - Set `HABLA_APP_BUNDLE_ID` (default: `com.maximbilan.habla-ios`)
+   - For Xcode Cloud, set the same environment variables in workflow settings
+   - `ci_scripts/ci_post_clone.sh` generates `Sources/Config/Config.swift` from these values
 
 4. Build and run on a real device (simulator doesn't support microphone)
 
@@ -48,6 +51,10 @@ Redux-like unidirectional data flow with SwiftUI:
 7. Backend translates source→target via Nova 2 Sonic and sends to phone
 8. Phone audio is translated target→source and streamed back
 9. App plays translated audio through speaker/earpiece
+
+When backend auth is enabled (`HABLA_SECRET` configured on backend), iOS sends `Authorization` on REST and iOS WebSocket requests using:
+
+`HMAC-SHA256(HABLA_SECRET, HABLA_APP_BUNDLE_ID)`
 
 Supported translation language codes:
 

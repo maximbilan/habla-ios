@@ -26,6 +26,7 @@ actor NetworkService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        BackendRequestAuth.apply(to: &request)
         request.httpBody = try JSONEncoder().encode(
             CallRequest(
                 to: phoneNumber,
@@ -53,6 +54,7 @@ actor NetworkService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
+        BackendRequestAuth.apply(to: &request)
         request.timeoutInterval = 15
 
         let (_, response) = try await session.data(for: request)
@@ -70,6 +72,7 @@ actor NetworkService {
 
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
+        BackendRequestAuth.apply(to: &request)
         request.timeoutInterval = 10
 
         let (data, response) = try await session.data(for: request)

@@ -1,7 +1,20 @@
 import Foundation
 
-// Auto-generated in CI by ci_scripts/ci_post_clone.sh.
-// Safe fallback for local development.
+// Auto-generated. Do not edit.
 enum AppConfig {
     static let backendURL = "http://localhost:8000"
+    static let backendAuthToken = "token"
+}
+
+enum BackendRequestAuth {
+    static var token: String {
+        AppConfig.backendAuthToken.trimmingCharacters(in: .whitespacesAndNewlines)
+    }
+
+    static func apply(to request: inout URLRequest) {
+        guard !token.isEmpty else {
+            return
+        }
+        request.setValue(token, forHTTPHeaderField: "Authorization")
+    }
 }
