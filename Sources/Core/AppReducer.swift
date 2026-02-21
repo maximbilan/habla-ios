@@ -89,26 +89,19 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callError = error
 
     case .agentTranscriptReceived(let entry):
-        if let last = state.agentTranscript.last,
-           last.role == entry.role,
-           normalizedTranscriptText(last.textEs) == normalizedTranscriptText(entry.textEs) {
-            if last.textEn != entry.textEn, let textEn = entry.textEn {
-                var updatedLast = last
-                updatedLast.textEn = textEn
-                state.agentTranscript[state.agentTranscript.count - 1] = updatedLast
-            }
+        if let index = state.agentTranscript.firstIndex(where: { $0.id == entry.id }) {
+            state.agentTranscript[index] = mergedTranscriptEntry(existing: state.agentTranscript[index], incoming: entry)
+        } else if let index = state.agentTranscript.lastIndex(where: { likelySameTranscriptEntry($0, entry) }) {
+            state.agentTranscript[index] = mergedTranscriptEntry(existing: state.agentTranscript[index], incoming: entry)
         } else {
             state.agentTranscript.append(entry)
         }
 
     case .agentTranscriptUpdated(let updatedEntry):
         if let index = state.agentTranscript.firstIndex(where: { $0.id == updatedEntry.id }) {
-            state.agentTranscript[index] = updatedEntry
-        } else if let index = state.agentTranscript.lastIndex(where: {
-            $0.role == updatedEntry.role &&
-            normalizedTranscriptText($0.textEs) == normalizedTranscriptText(updatedEntry.textEs)
-        }) {
-            state.agentTranscript[index] = updatedEntry
+            state.agentTranscript[index] = mergedTranscriptEntry(existing: state.agentTranscript[index], incoming: updatedEntry)
+        } else if let index = state.agentTranscript.lastIndex(where: { likelySameTranscriptEntry($0, updatedEntry) }) {
+            state.agentTranscript[index] = mergedTranscriptEntry(existing: state.agentTranscript[index], incoming: updatedEntry)
         } else {
             state.agentTranscript.append(updatedEntry)
         }
@@ -298,6 +291,22 @@ private func normalizedTranscriptText(_ text: String) -> String {
         .trimmingCharacters(in: .whitespacesAndNewlines)
         .replacingOccurrences(of: "  ", with: " ")
         .lowercased()
+}
+
+private func likelySameTranscriptEntry(_ lhs: TranscriptEntry, _ rhs: TranscriptEntry) -> Bool {
+    guard lhs.role == rhs.role else { return false }
+    guard normalizedTranscriptText(lhs.textEs) == normalizedTranscriptText(rhs.textEs) else { return false }
+    return abs(lhs.timestamp.timeIntervalSince(rhs.timestamp)) <= 2.0
+}
+
+private func mergedTranscriptEntry(existing: TranscriptEntry, incoming: TranscriptEntry) -> TranscriptEntry {
+    TranscriptEntry(
+        id: existing.id,
+        role: incoming.role,
+        textEs: incoming.textEs,
+        textEn: incoming.textEn ?? existing.textEn,
+        timestamp: existing.timestamp
+    )
 }
 
 private func applyDialingCountryChange(phoneNumber: String, from oldCountryCode: String, to newCountryCode: String) -> String {

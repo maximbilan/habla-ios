@@ -16,12 +16,12 @@ struct TranscriptBubbleView: View {
                     .font(.body)
                     .foregroundColor(.appTextPrimary)
 
-                if let textEn = entry.textEn, !textEn.isEmpty {
+                if let textEn = displayedTranslation {
                     Text(textEn)
                         .font(.body)
                         .foregroundColor(.appTextSecondary)
                         .italic()
-                } else {
+                } else if entry.textEn == nil {
                     Text("Translating...")
                         .font(.caption)
                         .foregroundColor(.appTextSecondary)
@@ -36,5 +36,22 @@ struct TranscriptBubbleView: View {
 
             if entry.role == .agent { Spacer(minLength: 48) }
         }
+    }
+
+    private var displayedTranslation: String? {
+        guard let textEn = entry.textEn?.trimmingCharacters(in: .whitespacesAndNewlines), !textEn.isEmpty else {
+            return nil
+        }
+        if normalized(textEn) == normalized(entry.textEs) {
+            return nil
+        }
+        return textEn
+    }
+
+    private func normalized(_ text: String) -> String {
+        text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "  ", with: " ")
+            .lowercased()
     }
 }

@@ -3,6 +3,16 @@ import Foundation
 final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
     private let webSocketService: AgentWebSocketService
     private var entryIDsByKey: [String: UUID] = [:]
+    private let iso8601WithFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime, .withFractionalSeconds]
+        return formatter
+    }()
+    private let iso8601WithoutFractionalSeconds: ISO8601DateFormatter = {
+        let formatter = ISO8601DateFormatter()
+        formatter.formatOptions = [.withInternetDateTime]
+        return formatter
+    }()
 
     init(webSocketService: AgentWebSocketService = AgentWebSocketService()) {
         self.webSocketService = webSocketService
@@ -155,7 +165,12 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
     }
 
     private func parseDate(_ value: String) -> Date {
-        let formatter = ISO8601DateFormatter()
-        return formatter.date(from: value) ?? Date()
+        if let parsed = iso8601WithFractionalSeconds.date(from: value) {
+            return parsed
+        }
+        if let parsed = iso8601WithoutFractionalSeconds.date(from: value) {
+            return parsed
+        }
+        return Date()
     }
 }
