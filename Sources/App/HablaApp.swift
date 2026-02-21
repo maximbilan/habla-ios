@@ -46,6 +46,7 @@ struct HablaApp: App {
                 .preferredColorScheme(.dark)
                 .onAppear {
                     store.dispatch(.loadCallHistory)
+                    store.dispatch(.loadVerifiedCallerIds)
                 }
         }
     }
