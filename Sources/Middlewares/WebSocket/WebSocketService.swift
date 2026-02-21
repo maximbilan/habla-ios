@@ -18,8 +18,11 @@ actor WebSocketService {
             throw AppError.webSocketError("Invalid WebSocket URL")
         }
 
+        var request = URLRequest(url: url)
+        BackendRequestAuth.apply(to: &request)
+
         let session = URLSession(configuration: .default)
-        webSocketTask = session.webSocketTask(with: url)
+        webSocketTask = session.webSocketTask(with: request)
         webSocketTask?.resume()
         isConnected = true
     }
