@@ -17,11 +17,15 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
         case .initiateCall(let phoneNumber):
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
+            let sourceLanguage = state.translationSourceLanguage
+            let targetLanguage = state.translationTargetLanguage
             Task {
                 do {
                     let response = try await networkService.initiateCall(
                         to: phoneNumber,
                         from: fromNumber,
+                        sourceLanguage: sourceLanguage,
+                        targetLanguage: targetLanguage,
                         serverURL: serverURL
                     )
                     await MainActor.run {

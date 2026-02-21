@@ -10,16 +10,33 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .setCallMode(let mode):
         state.callMode = mode
 
+    case .dialCountryChanged(let countryCode):
+        let oldCountryCode = state.selectedDialCountryCode
+        state.selectedDialCountryCode = countryCode
+        state.phoneNumber = applyDialingCountryChange(
+            phoneNumber: state.phoneNumber,
+            from: oldCountryCode,
+            to: countryCode
+        )
+        UserDefaults.standard.set(countryCode, forKey: AppState.dialCountryCodeKey)
+
     case .dialpadDigitPressed(let digit):
         state.phoneNumber.append(digit)
 
     case .dialpadBackspace:
-        if !state.phoneNumber.isEmpty && state.phoneNumber != "+34" {
+        let dialCode = PhoneCountryCatalog.dialCode(for: state.selectedDialCountryCode)
+        if state.phoneNumber.count > dialCode.count {
             state.phoneNumber.removeLast()
+        } else {
+            state.phoneNumber = dialCode
         }
 
     case .phoneNumberChanged(let number):
         state.phoneNumber = number
+        if let matchedCountry = PhoneCountryCatalog.countryForPhoneNumber(number) {
+            state.selectedDialCountryCode = matchedCountry.isoCode
+            UserDefaults.standard.set(matchedCountry.isoCode, forKey: AppState.dialCountryCodeKey)
+        }
 
     case .initiateCall:
         state.callMode = .translation
@@ -125,6 +142,20 @@ func appReducer(state: inout AppState, action: AppAction) {
 
     case .callerIdPhoneNumberChanged(let number):
         state.callerId.phoneNumber = number
+        if let matchedCountry = PhoneCountryCatalog.countryForPhoneNumber(number) {
+            state.callerId.selectedCountryCode = matchedCountry.isoCode
+            UserDefaults.standard.set(matchedCountry.isoCode, forKey: CallerIdState.selectedCountryCodeKey)
+        }
+
+    case .callerIdCountryChanged(let countryCode):
+        let oldCountryCode = state.callerId.selectedCountryCode
+        state.callerId.selectedCountryCode = countryCode
+        state.callerId.phoneNumber = applyDialingCountryChange(
+            phoneNumber: state.callerId.phoneNumber,
+            from: oldCountryCode,
+            to: countryCode
+        )
+        UserDefaults.standard.set(countryCode, forKey: CallerIdState.selectedCountryCodeKey)
 
     case .callerIdFriendlyNameChanged(let name):
         state.callerId.friendlyName = name
@@ -190,6 +221,40 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .clearCallerIdError:
         state.callerId.error = nil
 
+    case .translationSourceLanguageChanged(let code):
+        guard let language = TranslationLanguageCatalog.language(code: code) else {
+            break
+        }
+
+        state.translationSourceLanguage = language.code
+        UserDefaults.standard.set(language.code, forKey: AppState.translationSourceLanguageKey)
+
+        if state.translationTargetLanguage == language.code {
+            let preferred = TranslationLanguageCatalog.defaultTarget.code
+            let replacement = preferred == language.code
+                ? TranslationLanguageCatalog.fallbackLanguage(excluding: language.code).code
+                : preferred
+            state.translationTargetLanguage = replacement
+            UserDefaults.standard.set(replacement, forKey: AppState.translationTargetLanguageKey)
+        }
+
+    case .translationTargetLanguageChanged(let code):
+        guard let language = TranslationLanguageCatalog.language(code: code) else {
+            break
+        }
+
+        state.translationTargetLanguage = language.code
+        UserDefaults.standard.set(language.code, forKey: AppState.translationTargetLanguageKey)
+
+        if state.translationSourceLanguage == language.code {
+            let preferred = TranslationLanguageCatalog.defaultSource.code
+            let replacement = preferred == language.code
+                ? TranslationLanguageCatalog.fallbackLanguage(excluding: language.code).code
+                : preferred
+            state.translationSourceLanguage = replacement
+            UserDefaults.standard.set(replacement, forKey: AppState.translationSourceLanguageKey)
+        }
+
     case .clearError:
         state.callError = nil
 
@@ -211,4 +276,30 @@ func appReducer(state: inout AppState, action: AppAction) {
     default:
         break
     }
+}
+
+private func applyDialingCountryChange(phoneNumber: String, from oldCountryCode: String, to newCountryCode: String) -> String {
+    let oldDialCode = PhoneCountryCatalog.dialCode(for: oldCountryCode)
+    let newDialCode = PhoneCountryCatalog.dialCode(for: newCountryCode)
+
+    var subscriber = phoneNumber
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .replacingOccurrences(of: " ", with: "")
+
+    if subscriber.hasPrefix(oldDialCode) {
+        subscriber.removeFirst(oldDialCode.count)
+        return newDialCode + subscriber
+    }
+
+    if let matchedCountry = PhoneCountryCatalog.countryForPhoneNumber(subscriber),
+       subscriber.hasPrefix(matchedCountry.dialCode) {
+        subscriber.removeFirst(matchedCountry.dialCode.count)
+        return newDialCode + subscriber
+    }
+
+    if subscriber.hasPrefix("+") {
+        subscriber.removeFirst()
+    }
+
+    return newDialCode + subscriber
 }

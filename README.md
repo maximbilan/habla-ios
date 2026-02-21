@@ -1,6 +1,6 @@
 # Habla iOS
 
-Real-time phone call translation app for the Amazon Nova AI Hackathon. Habla lets English speakers make phone calls to Spanish phone numbers with live translation powered by Amazon Nova 2 Sonic.
+Real-time phone call translation app for the Amazon Nova AI Hackathon. Habla lets callers dial international phone numbers with live bidirectional translation powered by Amazon Nova 2 Sonic.
 
 ## Architecture
 
@@ -39,13 +39,26 @@ Redux-like unidirectional data flow with SwiftUI:
 
 ## How It Works
 
-1. User dials a Spanish phone number and taps Call
-2. App calls `POST /call` to initiate a Twilio PSTN call
-3. App opens a WebSocket to `/ws/{call_sid}`
-4. Mic audio (PCM 16-bit, 16kHz, mono) streams to backend via WebSocket
-5. Backend translates English→Spanish via Nova 2 Sonic and sends to phone
-6. Phone person's Spanish audio is translated to English and streamed back
-7. App plays translated English audio through speaker/earpiece
+1. User selects a destination country code in the dialer
+2. User selects translation languages in Settings (`I speak` and `They speak`)
+3. User dials a phone number and taps Call
+4. App calls `POST /call` with `source_language` and `target_language`
+5. App opens a WebSocket to `/ws/{call_sid}`
+6. Mic audio (PCM 16-bit, 16kHz, mono) streams to backend via WebSocket
+7. Backend translates source→target via Nova 2 Sonic and sends to phone
+8. Phone audio is translated target→source and streamed back
+9. App plays translated audio through speaker/earpiece
+
+Supported translation language codes:
+
+- `en-US`, `en-GB`, `en-AU`, `en-IN`
+- `es-US`, `fr-FR`, `de-DE`, `it-IT`, `pt-BR`, `hi-IN`
+
+The backend is the source of truth for supported languages (`GET /translation/languages`).
+
+## Previous Flow (EN↔ES default)
+
+The app still defaults to `en-US → es-US`, so existing behavior is unchanged until users change the language settings.
 
 ## Project Structure
 

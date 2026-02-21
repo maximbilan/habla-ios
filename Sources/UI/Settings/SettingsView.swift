@@ -54,6 +54,37 @@ struct SettingsView: View {
                     Divider()
                         .background(Color.appSurface)
 
+                    // Translation section
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Translation")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.appTextSecondary)
+                            .textCase(.uppercase)
+
+                        Text("Choose the language you speak and the language the other person speaks.")
+                            .font(.system(size: 13))
+                            .foregroundColor(.appTextSecondary)
+
+                        languagePickerRow(
+                            title: "I speak",
+                            selectedCode: state.translationSourceLanguage,
+                            onSelect: { code in
+                                store.dispatch(.translationSourceLanguageChanged(code))
+                            }
+                        )
+
+                        languagePickerRow(
+                            title: "They speak",
+                            selectedCode: state.translationTargetLanguage,
+                            onSelect: { code in
+                                store.dispatch(.translationTargetLanguageChanged(code))
+                            }
+                        )
+                    }
+
+                    Divider()
+                        .background(Color.appSurface)
+
                     // Caller ID section
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Caller ID")
@@ -93,7 +124,10 @@ struct SettingsView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             aboutRow(title: "App", value: "Habla v1.0.0")
                             aboutRow(title: "Purpose", value: "Real-time phone call translation")
-                            aboutRow(title: "Translation", value: "English ↔ Spanish")
+                            aboutRow(
+                                title: "Translation",
+                                value: "\(TranslationLanguageCatalog.languageLabel(for: state.translationSourceLanguage)) <-> \(TranslationLanguageCatalog.languageLabel(for: state.translationTargetLanguage))"
+                            )
                             aboutRow(title: "Powered by", value: "Amazon Nova 2 Sonic")
                             aboutRow(title: "Built for", value: "Amazon Nova AI Hackathon")
                         }
@@ -112,6 +146,38 @@ struct SettingsView: View {
         .sheet(isPresented: $isPresentingAddCallerId) {
             CallerIdSettingsView()
                 .environmentObject(store)
+        }
+    }
+
+    private func languagePickerRow(
+        title: String,
+        selectedCode: String,
+        onSelect: @escaping (String) -> Void
+    ) -> some View {
+        Menu {
+            ForEach(TranslationLanguageCatalog.languages) { language in
+                Button(language.label) {
+                    onSelect(language.code)
+                }
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Text(title)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+
+                Spacer()
+
+                Text(TranslationLanguageCatalog.languageLabel(for: selectedCode))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.appTextPrimary)
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.appTextSecondary)
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
         }
     }
 

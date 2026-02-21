@@ -8,6 +8,8 @@ import Foundation
 struct CallRequest: Codable, Sendable {
     let to: String
     let from: String?
+    let source_language: String
+    let target_language: String
 }
 
 struct CallResponse: Codable, Sendable {
