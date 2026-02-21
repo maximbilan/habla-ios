@@ -12,6 +12,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
         case .initiateAgentCall(let phoneNumber, let prompt, let userName):
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
+            let calleeLanguage = state.translationTargetLanguage
 
             Task {
                 do {
@@ -20,7 +21,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                         from: fromNumber,
                         prompt: prompt,
                         userName: userName,
-                        language: "es",
+                        language: calleeLanguage,
                         serverURL: serverURL
                     )
 
