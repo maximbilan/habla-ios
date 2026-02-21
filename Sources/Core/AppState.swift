@@ -121,7 +121,8 @@ struct PhoneCountry: Equatable, Sendable, Identifiable {
     let dialCode: String
 
     var id: String { isoCode }
-    var label: String { "\(name) (\(dialCode))" }
+    var flagEmoji: String { emojiFlag(forRegionCode: isoCode) }
+    var label: String { "\(flagEmoji) \(name) (\(dialCode))" }
 }
 
 enum PhoneCountryCatalog {
@@ -171,12 +172,15 @@ struct SupportedTranslationLanguage: Equatable, Sendable, Identifiable {
     let localeLabel: String
 
     var id: String { code }
+    var regionCode: String { code.split(separator: "-").last.map(String.init) ?? "" }
+    var flagEmoji: String { emojiFlag(forRegionCode: regionCode) }
     var label: String {
         if localeLabel.isEmpty {
             return name
         }
         return "\(name) (\(localeLabel))"
     }
+    var labelWithEmoji: String { "\(flagEmoji) \(label)" }
 }
 
 enum TranslationLanguageCatalog {
@@ -222,6 +226,11 @@ enum TranslationLanguageCatalog {
         language(code: code)?.label ?? code
     }
 
+    static func languageLabelWithEmoji(for code: String) -> String {
+        guard let language = language(code: code) else { return code }
+        return language.labelWithEmoji
+    }
+
     static func fallbackLanguage(excluding code: String) -> SupportedTranslationLanguage {
         languages.first(where: { $0.code != code }) ?? defaultTarget
     }
@@ -232,4 +241,18 @@ enum TranslationLanguageCatalog {
             .replacingOccurrences(of: "_", with: "-")
             .lowercased()
     }
+}
+
+private func emojiFlag(forRegionCode rawCode: String) -> String {
+    let regionCode = rawCode.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
+    guard regionCode.count == 2 else { return "🏳️" }
+
+    let scalars = regionCode.unicodeScalars.compactMap { scalar -> UnicodeScalar? in
+        let value = scalar.value
+        guard (65...90).contains(value) else { return nil }
+        return UnicodeScalar(127397 + value)
+    }
+
+    guard scalars.count == 2 else { return "🏳️" }
+    return String(String.UnicodeScalarView(scalars))
 }

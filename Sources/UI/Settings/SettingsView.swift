@@ -133,7 +133,7 @@ struct SettingsView: View {
     ) -> some View {
         Menu {
             ForEach(TranslationLanguageCatalog.languages) { language in
-                Button(language.label) {
+                Button(language.labelWithEmoji) {
                     onSelect(language.code)
                 }
             }
@@ -145,7 +145,7 @@ struct SettingsView: View {
 
                 Spacer()
 
-                Text(TranslationLanguageCatalog.languageLabel(for: selectedCode))
+                Text(TranslationLanguageCatalog.languageLabelWithEmoji(for: selectedCode))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.appTextPrimary)
 
