@@ -8,11 +8,21 @@ import SwiftUI
 struct CallButton: View {
     let isActive: Bool
     let isEndCall: Bool
+    let size: CGFloat
+    let iconSize: CGFloat
     let action: () -> Void
 
-    init(isActive: Bool = true, isEndCall: Bool = false, action: @escaping () -> Void) {
+    init(
+        isActive: Bool = true,
+        isEndCall: Bool = false,
+        size: CGFloat = 72,
+        iconSize: CGFloat = 28,
+        action: @escaping () -> Void
+    ) {
         self.isActive = isActive
         self.isEndCall = isEndCall
+        self.size = size
+        self.iconSize = iconSize
         self.action = action
     }
 
@@ -23,9 +33,9 @@ struct CallButton: View {
             action()
         }) {
             Image(systemName: isEndCall ? "phone.down.fill" : "phone.fill")
-                .font(.system(size: 28, weight: .semibold))
+                .font(.system(size: iconSize, weight: .semibold))
                 .foregroundColor(.white)
-                .frame(width: 72, height: 72)
+                .frame(width: size, height: size)
                 .background(
                     Circle()
                         .fill(isEndCall ? Color.appDestructive : Color.appAccent)
