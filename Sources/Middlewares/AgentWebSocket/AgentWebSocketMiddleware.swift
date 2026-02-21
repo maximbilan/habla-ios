@@ -11,6 +11,7 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
     func process(action: AppAction, state: AppState, dispatch: @escaping @MainActor (AppAction) -> Void) {
         switch action {
         case .connectAgentWebSocket(let callSid):
+            entryIDsByKey.removeAll()
             let serverURL = state.serverURL
             let ws = webSocketService
 
@@ -104,7 +105,8 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
     @MainActor
     private func makeEntry(role: String, textEs: String, textEn: String?, timestamp: String) -> TranscriptEntry {
         let roleValue = TranscriptRole(rawValue: role) ?? .callee
-        let key = "\(role)|\(timestamp)|\(textEs)"
+        let normalizedText = textEs.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let key = "\(role)|\(timestamp)|\(normalizedText)"
         let id = entryIDsByKey[key] ?? {
             let newID = UUID()
             entryIDsByKey[key] = newID
