@@ -43,9 +43,9 @@ struct HablaApp: App {
         WindowGroup {
             ContentView()
                 .environmentObject(store)
-                .preferredColorScheme(.dark)
                 .onAppear {
                     store.dispatch(.loadCallHistory)
+                    store.dispatch(.loadVerifiedCallerIds)
                 }
         }
     }

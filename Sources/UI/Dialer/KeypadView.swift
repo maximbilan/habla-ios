@@ -7,7 +7,11 @@ import SwiftUI
 
 struct KeypadView: View {
     let onDigit: (String) -> Void
-    let onBackspace: () -> Void
+    let buttonSize: CGFloat
+    let rowSpacing: CGFloat
+    let columnSpacing: CGFloat
+    let digitFontSize: CGFloat
+    let lettersFontSize: CGFloat
 
     private let rows: [[KeypadItem]] = [
         [.digit("1", ""), .digit("2", "ABC"), .digit("3", "DEF")],
@@ -16,13 +20,34 @@ struct KeypadView: View {
         [.digit("*", ""), .digit("0", "+"), .digit("#", "")],
     ]
 
+    init(
+        onDigit: @escaping (String) -> Void,
+        buttonSize: CGFloat = 72,
+        rowSpacing: CGFloat = 16,
+        columnSpacing: CGFloat = 24,
+        digitFontSize: CGFloat = 28,
+        lettersFontSize: CGFloat = 10
+    ) {
+        self.onDigit = onDigit
+        self.buttonSize = buttonSize
+        self.rowSpacing = rowSpacing
+        self.columnSpacing = columnSpacing
+        self.digitFontSize = digitFontSize
+        self.lettersFontSize = lettersFontSize
+    }
+
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: rowSpacing) {
             ForEach(rows.indices, id: \.self) { rowIndex in
-                HStack(spacing: 24) {
+                HStack(spacing: columnSpacing) {
                     ForEach(rows[rowIndex].indices, id: \.self) { colIndex in
                         let item = rows[rowIndex][colIndex]
-                        KeypadButton(item: item) {
+                        KeypadButton(
+                            item: item,
+                            buttonSize: buttonSize,
+                            digitFontSize: digitFontSize,
+                            lettersFontSize: lettersFontSize
+                        ) {
                             let generator = UIImpactFeedbackGenerator(style: .light)
                             generator.impactOccurred()
                             switch item {
@@ -31,25 +56,6 @@ struct KeypadView: View {
                             }
                         }
                     }
-                }
-            }
-
-            HStack(spacing: 24) {
-                Color.clear
-                    .frame(width: 72, height: 72)
-
-                Color.clear
-                    .frame(width: 72, height: 72)
-
-                Button(action: {
-                    let generator = UIImpactFeedbackGenerator(style: .light)
-                    generator.impactOccurred()
-                    onBackspace()
-                }) {
-                    Image(systemName: "delete.backward.fill")
-                        .font(.system(size: 22))
-                        .foregroundColor(.appTextSecondary)
-                        .frame(width: 72, height: 72)
                 }
             }
         }
@@ -62,6 +68,9 @@ private enum KeypadItem {
 
 private struct KeypadButton: View {
     let item: KeypadItem
+    let buttonSize: CGFloat
+    let digitFontSize: CGFloat
+    let lettersFontSize: CGFloat
     let action: () -> Void
 
     var body: some View {
@@ -70,16 +79,16 @@ private struct KeypadButton: View {
                 switch item {
                 case .digit(let digit, let letters):
                     Text(digit)
-                        .font(.system(size: 28, weight: .medium, design: .rounded))
+                        .font(.system(size: digitFontSize, weight: .medium, design: .rounded))
                         .foregroundColor(.appTextPrimary)
                     if !letters.isEmpty {
                         Text(letters)
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: lettersFontSize, weight: .medium))
                             .foregroundColor(.appTextSecondary)
                     }
                 }
             }
-            .frame(width: 72, height: 72)
+            .frame(width: buttonSize, height: buttonSize)
             .background(
                 Circle()
                     .fill(Color.appKeypad)

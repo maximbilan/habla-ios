@@ -110,28 +110,6 @@ struct SettingsView: View {
                                 .foregroundColor(.appAccent)
                         }
                     }
-
-                    Divider()
-                        .background(Color.appSurface)
-
-                    // About section
-                    VStack(alignment: .leading, spacing: 12) {
-                        Text("About")
-                            .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(.appTextSecondary)
-                            .textCase(.uppercase)
-
-                        VStack(alignment: .leading, spacing: 8) {
-                            aboutRow(title: "App", value: "Habla v1.0.0")
-                            aboutRow(title: "Purpose", value: "Real-time phone call translation")
-                            aboutRow(
-                                title: "Translation",
-                                value: "\(TranslationLanguageCatalog.languageLabel(for: state.translationSourceLanguage)) <-> \(TranslationLanguageCatalog.languageLabel(for: state.translationTargetLanguage))"
-                            )
-                            aboutRow(title: "Powered by", value: "Amazon Nova 2 Sonic")
-                            aboutRow(title: "Built for", value: "Amazon Nova AI Hackathon")
-                        }
-                    }
                 }
                 .padding(20)
             }
@@ -141,7 +119,6 @@ struct SettingsView: View {
         .background(Color.appBackground)
         .onAppear {
             agentUserName = state.agentUserName
-            store.dispatch(.loadVerifiedCallerIds)
         }
         .sheet(isPresented: $isPresentingAddCallerId) {
             CallerIdSettingsView()
@@ -156,7 +133,7 @@ struct SettingsView: View {
     ) -> some View {
         Menu {
             ForEach(TranslationLanguageCatalog.languages) { language in
-                Button(language.label) {
+                Button(language.labelWithEmoji) {
                     onSelect(language.code)
                 }
             }
@@ -168,7 +145,7 @@ struct SettingsView: View {
 
                 Spacer()
 
-                Text(TranslationLanguageCatalog.languageLabel(for: selectedCode))
+                Text(TranslationLanguageCatalog.languageLabelWithEmoji(for: selectedCode))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.appTextPrimary)
 
@@ -179,19 +156,6 @@ struct SettingsView: View {
             .padding(12)
             .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
         }
-    }
-
-    private func aboutRow(title: String, value: String) -> some View {
-        HStack {
-            Text(title)
-                .font(.system(size: 15))
-                .foregroundColor(.appTextSecondary)
-            Spacer()
-            Text(value)
-                .font(.system(size: 15))
-                .foregroundColor(.appTextPrimary)
-        }
-        .padding(.vertical, 4)
     }
 
     @ViewBuilder

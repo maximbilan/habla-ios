@@ -38,7 +38,7 @@ struct CallerIdSettingsView: View {
                         }
                     } label: {
                         HStack(spacing: 8) {
-                            Text(selectedCountry.name)
+                            Text("\(selectedCountry.flagEmoji) \(selectedCountry.name)")
                                 .font(.system(size: 14, weight: .medium))
                             Text(selectedCountry.dialCode)
                                 .font(.system(size: 14, weight: .semibold, design: .monospaced))

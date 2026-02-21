@@ -21,6 +21,7 @@ struct CallHistoryView: View {
                 calls: state.recentCalls,
                 onCallTapped: { number in
                     store.dispatch(.phoneNumberChanged(number))
+                    store.dispatch(.navigateTo(.dialer))
                 }
             )
             .frame(maxWidth: .infinity, maxHeight: .infinity)
