@@ -89,10 +89,25 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callError = error
 
     case .agentTranscriptReceived(let entry):
-        state.agentTranscript.append(entry)
+        if let last = state.agentTranscript.last,
+           last.role == entry.role,
+           normalizedTranscriptText(last.textEs) == normalizedTranscriptText(entry.textEs) {
+            if last.textEn != entry.textEn, let textEn = entry.textEn {
+                var updatedLast = last
+                updatedLast.textEn = textEn
+                state.agentTranscript[state.agentTranscript.count - 1] = updatedLast
+            }
+        } else {
+            state.agentTranscript.append(entry)
+        }
 
     case .agentTranscriptUpdated(let updatedEntry):
         if let index = state.agentTranscript.firstIndex(where: { $0.id == updatedEntry.id }) {
+            state.agentTranscript[index] = updatedEntry
+        } else if let index = state.agentTranscript.lastIndex(where: {
+            $0.role == updatedEntry.role &&
+            normalizedTranscriptText($0.textEs) == normalizedTranscriptText(updatedEntry.textEs)
+        }) {
             state.agentTranscript[index] = updatedEntry
         } else {
             state.agentTranscript.append(updatedEntry)
@@ -276,6 +291,13 @@ func appReducer(state: inout AppState, action: AppAction) {
     default:
         break
     }
+}
+
+private func normalizedTranscriptText(_ text: String) -> String {
+    text
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .replacingOccurrences(of: "  ", with: " ")
+        .lowercased()
 }
 
 private func applyDialingCountryChange(phoneNumber: String, from oldCountryCode: String, to newCountryCode: String) -> String {
