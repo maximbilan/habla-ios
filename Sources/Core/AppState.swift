@@ -121,12 +121,20 @@ struct PhoneCountry: Equatable, Sendable, Identifiable {
     let dialCode: String
 
     var id: String { isoCode }
-    var flagEmoji: String { emojiFlag(forRegionCode: isoCode) }
+    var flagEmoji: String {
+        if isoCode == PhoneCountryCatalog.manualCountry.isoCode {
+            return "🌍"
+        }
+        return emojiFlag(forRegionCode: isoCode)
+    }
     var label: String { "\(flagEmoji) \(name) (\(dialCode))" }
 }
 
 enum PhoneCountryCatalog {
+    static let manualCountry = PhoneCountry(isoCode: "ZZ", name: "Any Country", dialCode: "+")
+
     static let countries: [PhoneCountry] = [
+        manualCountry,
         .init(isoCode: "ES", name: "Spain", dialCode: "+34"),
         .init(isoCode: "US", name: "United States", dialCode: "+1"),
         .init(isoCode: "CA", name: "Canada", dialCode: "+1"),
@@ -146,7 +154,7 @@ enum PhoneCountryCatalog {
         .init(isoCode: "JP", name: "Japan", dialCode: "+81"),
     ]
 
-    static let defaultCountry = countries[0]
+    static let defaultCountry = manualCountry
 
     private static let countryByCode: [String: PhoneCountry] = Dictionary(
         uniqueKeysWithValues: countries.map { ($0.isoCode.uppercased(), $0) }
@@ -161,7 +169,9 @@ enum PhoneCountryCatalog {
     }
 
     static func countryForPhoneNumber(_ phoneNumber: String) -> PhoneCountry? {
-        let sortedByDialCodeLength = countries.sorted { $0.dialCode.count > $1.dialCode.count }
+        let sortedByDialCodeLength = countries
+            .filter { $0.isoCode != manualCountry.isoCode }
+            .sorted { $0.dialCode.count > $1.dialCode.count }
         return sortedByDialCodeLength.first { phoneNumber.hasPrefix($0.dialCode) }
     }
 }
