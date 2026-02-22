@@ -33,9 +33,9 @@ func appReducer(state: inout AppState, action: AppAction) {
 
     case .phoneNumberChanged(let number):
         state.phoneNumber = number
-        if let matchedCountry = PhoneCountryCatalog.countryForPhoneNumber(number) {
-            state.selectedDialCountryCode = matchedCountry.isoCode
-            UserDefaults.standard.set(matchedCountry.isoCode, forKey: AppState.dialCountryCodeKey)
+        if let resolvedCountryCode = resolveCountryCode(for: number) {
+            state.selectedDialCountryCode = resolvedCountryCode
+            UserDefaults.standard.set(resolvedCountryCode, forKey: AppState.dialCountryCodeKey)
         }
 
     case .initiateCall:
@@ -154,9 +154,9 @@ func appReducer(state: inout AppState, action: AppAction) {
 
     case .callerIdPhoneNumberChanged(let number):
         state.callerId.phoneNumber = number
-        if let matchedCountry = PhoneCountryCatalog.countryForPhoneNumber(number) {
-            state.callerId.selectedCountryCode = matchedCountry.isoCode
-            UserDefaults.standard.set(matchedCountry.isoCode, forKey: CallerIdState.selectedCountryCodeKey)
+        if let resolvedCountryCode = resolveCountryCode(for: number) {
+            state.callerId.selectedCountryCode = resolvedCountryCode
+            UserDefaults.standard.set(resolvedCountryCode, forKey: CallerIdState.selectedCountryCodeKey)
         }
 
     case .callerIdCountryChanged(let countryCode):
@@ -313,13 +313,48 @@ private func mergedTranscriptEntry(existing: TranscriptEntry, incoming: Transcri
     )
 }
 
+private func resolveCountryCode(for rawPhoneNumber: String) -> String? {
+    let normalized = rawPhoneNumber
+        .trimmingCharacters(in: .whitespacesAndNewlines)
+        .replacingOccurrences(of: " ", with: "")
+
+    if let matchedCountry = PhoneCountryCatalog.countryForPhoneNumber(normalized) {
+        return matchedCountry.isoCode
+    }
+
+    if normalized.hasPrefix("+") {
+        return PhoneCountryCatalog.manualCountry.isoCode
+    }
+
+    return nil
+}
+
 private func applyDialingCountryChange(phoneNumber: String, from oldCountryCode: String, to newCountryCode: String) -> String {
     let oldDialCode = PhoneCountryCatalog.dialCode(for: oldCountryCode)
     let newDialCode = PhoneCountryCatalog.dialCode(for: newCountryCode)
+    let manualCountryCode = PhoneCountryCatalog.manualCountry.isoCode
 
     var subscriber = phoneNumber
         .trimmingCharacters(in: .whitespacesAndNewlines)
         .replacingOccurrences(of: " ", with: "")
+
+    if oldCountryCode == newCountryCode {
+        return subscriber.isEmpty ? newDialCode : subscriber
+    }
+
+    if oldCountryCode == manualCountryCode {
+        if let matchedCountry = PhoneCountryCatalog.countryForPhoneNumber(subscriber),
+           subscriber.hasPrefix(matchedCountry.dialCode) {
+            subscriber.removeFirst(matchedCountry.dialCode.count)
+            return newDialCode + subscriber
+        }
+
+        if subscriber.hasPrefix("+") {
+            subscriber.removeFirst()
+        }
+
+        return newDialCode + subscriber
+    }
 
     if subscriber.hasPrefix(oldDialCode) {
         subscriber.removeFirst(oldDialCode.count)

@@ -42,7 +42,7 @@ Redux-like unidirectional data flow with SwiftUI:
 
 ## How It Works
 
-1. User selects a destination country code in the dialer
+1. User selects a destination country code (or `Any Country (+)`) in the dialer
 2. User selects translation languages in Settings (`I speak` and `They speak`)
 3. User dials a phone number and taps Call
 4. App calls `POST /call` with `source_language` and `target_language`

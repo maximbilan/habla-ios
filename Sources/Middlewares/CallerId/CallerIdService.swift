@@ -29,7 +29,11 @@ actor CallerIdService {
         request.httpBody = try JSONEncoder().encode(payload)
 
         let (data, response) = try await session.data(for: request)
-        try validateHTTPResponse(response)
+        try validateHTTPResponse(
+            response,
+            data: data,
+            fallback: "Server error"
+        )
         return try JSONDecoder().decode(CallerIdVerifyResponse.self, from: data)
     }
 
@@ -45,7 +49,11 @@ actor CallerIdService {
         request.timeoutInterval = 15
 
         let (data, response) = try await session.data(for: request)
-        try validateHTTPResponse(response)
+        try validateHTTPResponse(
+            response,
+            data: data,
+            fallback: "Status check failed"
+        )
         return try JSONDecoder().decode(CallerIdStatusResponse.self, from: data)
     }
 
@@ -60,7 +68,11 @@ actor CallerIdService {
         request.timeoutInterval = 20
 
         let (data, response) = try await session.data(for: request)
-        try validateHTTPResponse(response)
+        try validateHTTPResponse(
+            response,
+            data: data,
+            fallback: "Failed to load caller IDs"
+        )
         return try JSONDecoder().decode(CallerIdListResponse.self, from: data)
     }
 
@@ -74,18 +86,62 @@ actor CallerIdService {
         BackendRequestAuth.apply(to: &request)
         request.timeoutInterval = 20
 
-        let (_, response) = try await session.data(for: request)
-        try validateHTTPResponse(response)
+        let (data, response) = try await session.data(for: request)
+        try validateHTTPResponse(
+            response,
+            data: data,
+            fallback: "Failed to delete caller ID"
+        )
     }
 
-    private func validateHTTPResponse(_ response: URLResponse) throws {
+    private func validateHTTPResponse(_ response: URLResponse, data: Data, fallback: String) throws {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AppError.networkError("Invalid response")
         }
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.networkError("Server error (\(httpResponse.statusCode))")
+            let message = serverErrorMessage(
+                statusCode: httpResponse.statusCode,
+                data: data,
+                fallback: fallback
+            )
+            throw AppError.networkError(message)
         }
+    }
+
+    private func serverErrorMessage(statusCode: Int, data: Data, fallback: String) -> String {
+        if let parsed = parseServerError(data: data) {
+            return "\(parsed) (\(statusCode))"
+        }
+        return "\(fallback) (\(statusCode))"
+    }
+
+    private func parseServerError(data: Data) -> String? {
+        guard !data.isEmpty else { return nil }
+
+        if let decoded = try? JSONDecoder().decode(CallerIdServerErrorPayload.self, from: data) {
+            if let detail = trimmedNonEmpty(decoded.detail) {
+                return detail
+            }
+            if let message = trimmedNonEmpty(decoded.message) {
+                return message
+            }
+            if let error = trimmedNonEmpty(decoded.error) {
+                return error
+            }
+        }
+
+        if let raw = trimmedNonEmpty(String(data: data, encoding: .utf8)) {
+            return raw
+        }
+
+        return nil
+    }
+
+    private func trimmedNonEmpty(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 
@@ -97,6 +153,12 @@ private struct CallerIdStartVerifyRequest: Codable, Sendable {
         case phoneNumber = "phone_number"
         case friendlyName = "friendly_name"
     }
+}
+
+private struct CallerIdServerErrorPayload: Decodable {
+    let detail: String?
+    let message: String?
+    let error: String?
 }
 
 private extension String {

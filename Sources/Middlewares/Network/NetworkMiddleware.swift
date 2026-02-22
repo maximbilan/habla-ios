@@ -42,7 +42,12 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
             }
 
         case .endCall:
-            guard let callSid = state.callSid else { return }
+            guard let callSid = state.callSid else {
+                Task { @MainActor in
+                    dispatch(.callEnded)
+                }
+                return
+            }
             let serverURL = state.serverURL
             let phoneNumber = state.phoneNumber
             let duration = state.callDuration

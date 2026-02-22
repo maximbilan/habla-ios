@@ -37,7 +37,13 @@ actor AgentNetworkService {
         let (data, response) = try await session.data(for: request)
         let httpResponse = try validatedHTTPResponse(response)
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Server error"))
+            throw AppError.networkError(
+                serverErrorMessage(
+                    statusCode: httpResponse.statusCode,
+                    data: data,
+                    fallback: "Server error"
+                )
+            )
         }
 
         return try JSONDecoder().decode(AgentCallResponse.self, from: data)
@@ -53,10 +59,16 @@ actor AgentNetworkService {
         BackendRequestAuth.apply(to: &request)
         request.timeoutInterval = 15
 
-        let (_, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request)
         let httpResponse = try validatedHTTPResponse(response)
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Failed to end agent call"))
+            throw AppError.networkError(
+                serverErrorMessage(
+                    statusCode: httpResponse.statusCode,
+                    data: data,
+                    fallback: "Failed to end agent call"
+                )
+            )
         }
     }
 
@@ -67,7 +79,59 @@ actor AgentNetworkService {
         return httpResponse
     }
 
-    private func serverErrorMessage(statusCode: Int, fallback: String) -> String {
-        "\(fallback) (\(statusCode))"
+    private func serverErrorMessage(statusCode: Int, data: Data, fallback: String) -> String {
+        if let parsed = parseServerError(data: data) {
+            if let unsupportedMessage = unsupportedDestinationMessage(for: parsed) {
+                return unsupportedMessage
+            }
+            return "\(parsed) (\(statusCode))"
+        }
+        return "\(fallback) (\(statusCode))"
     }
+
+    private func parseServerError(data: Data) -> String? {
+        guard !data.isEmpty else { return nil }
+
+        if let decoded = try? JSONDecoder().decode(AgentServerErrorPayload.self, from: data) {
+            if let detail = trimmedNonEmpty(decoded.detail) {
+                return detail
+            }
+            if let message = trimmedNonEmpty(decoded.message) {
+                return message
+            }
+            if let error = trimmedNonEmpty(decoded.error) {
+                return error
+            }
+        }
+
+        if let raw = trimmedNonEmpty(String(data: data, encoding: .utf8)) {
+            return raw
+        }
+
+        return nil
+    }
+
+    private func trimmedNonEmpty(_ value: String?) -> String? {
+        guard let value else { return nil }
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
+    }
+
+    private func unsupportedDestinationMessage(for message: String) -> String? {
+        let normalized = message.lowercased()
+        if normalized.contains("account not authorized to call")
+            || normalized.contains("international permissions")
+            || normalized.contains("geo-permissions")
+            || normalized.contains("twilio error code: 21215")
+            || normalized.contains("unable to create record: account not authorized to call") {
+            return "Calls to this destination aren't supported yet. Try another number."
+        }
+        return nil
+    }
+}
+
+private struct AgentServerErrorPayload: Decodable {
+    let detail: String?
+    let message: String?
+    let error: String?
 }

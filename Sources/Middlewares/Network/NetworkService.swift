@@ -41,7 +41,13 @@ actor NetworkService {
         let httpResponse = try validatedHTTPResponse(response)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Server error"))
+            throw AppError.networkError(
+                serverErrorMessage(
+                    statusCode: httpResponse.statusCode,
+                    data: data,
+                    fallback: "Server error"
+                )
+            )
         }
 
         return try JSONDecoder().decode(CallResponse.self, from: data)
@@ -57,11 +63,17 @@ actor NetworkService {
         BackendRequestAuth.apply(to: &request)
         request.timeoutInterval = 15
 
-        let (_, response) = try await session.data(for: request)
+        let (data, response) = try await session.data(for: request)
         let httpResponse = try validatedHTTPResponse(response)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Failed to end call"))
+            throw AppError.networkError(
+                serverErrorMessage(
+                    statusCode: httpResponse.statusCode,
+                    data: data,
+                    fallback: "Failed to end call"
+                )
+            )
         }
     }
 
@@ -79,7 +91,13 @@ actor NetworkService {
         let httpResponse = try validatedHTTPResponse(response)
 
         guard (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.networkError(serverErrorMessage(statusCode: httpResponse.statusCode, fallback: "Status check failed"))
+            throw AppError.networkError(
+                serverErrorMessage(
+                    statusCode: httpResponse.statusCode,
+                    data: data,
+                    fallback: "Status check failed"
+                )
+            )
         }
 
         return try JSONDecoder().decode(CallStatusResponse.self, from: data)
@@ -92,7 +110,60 @@ actor NetworkService {
         return httpResponse
     }
 
-    private func serverErrorMessage(statusCode: Int, fallback: String) -> String {
-        "\(fallback) (\(statusCode))"
+    private func serverErrorMessage(statusCode: Int, data: Data, fallback: String) -> String {
+        if let parsed = parseServerError(data: data) {
+            if let unsupportedMessage = unsupportedDestinationMessage(for: parsed) {
+                return unsupportedMessage
+            }
+            return "\(parsed) (\(statusCode))"
+        }
+        return "\(fallback) (\(statusCode))"
+    }
+
+    private func parseServerError(data: Data) -> String? {
+        guard !data.isEmpty else { return nil }
+
+        if let decoded = try? JSONDecoder().decode(ServerErrorPayload.self, from: data) {
+            if let detail = decoded.detail?.trimmedNonEmpty {
+                return detail
+            }
+            if let message = decoded.message?.trimmedNonEmpty {
+                return message
+            }
+            if let error = decoded.error?.trimmedNonEmpty {
+                return error
+            }
+        }
+
+        if let raw = String(data: data, encoding: .utf8)?.trimmedNonEmpty {
+            return raw
+        }
+
+        return nil
+    }
+
+    private func unsupportedDestinationMessage(for message: String) -> String? {
+        let normalized = message.lowercased()
+        if normalized.contains("account not authorized to call")
+            || normalized.contains("international permissions")
+            || normalized.contains("geo-permissions")
+            || normalized.contains("twilio error code: 21215")
+            || normalized.contains("unable to create record: account not authorized to call") {
+            return "Calls to this destination aren't supported yet. Try another number."
+        }
+        return nil
+    }
+}
+
+private struct ServerErrorPayload: Decodable {
+    let detail: String?
+    let message: String?
+    let error: String?
+}
+
+private extension String {
+    var trimmedNonEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
