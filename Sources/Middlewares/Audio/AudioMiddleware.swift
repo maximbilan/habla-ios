@@ -51,7 +51,7 @@ final class AudioMiddleware: Middleware, @unchecked Sendable {
                 }
             }
 
-        case .stopAudioCapture, .endCall, .callFailed:
+        case .stopAudioCapture, .endCall, .callFailed, .callEnded, .webSocketDisconnected:
             Task {
                 await audioService.stopCapture()
             }

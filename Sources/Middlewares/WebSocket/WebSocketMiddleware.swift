@@ -44,6 +44,7 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
 
                     await MainActor.run {
                         dispatch(.webSocketDisconnected)
+                        dispatch(.callEnded)
                     }
                 } catch {
                     let appError = (error as? AppError) ?? .webSocketError(error.localizedDescription)
