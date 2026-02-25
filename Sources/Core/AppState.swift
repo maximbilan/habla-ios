@@ -147,17 +147,8 @@ enum BackendService: String, CaseIterable, Equatable, Sendable, Identifiable {
         }
     }
 
-    var subtitle: String {
-        switch self {
-        case .nova:
-            return "habla-core"
-        case .gemini:
-            return "habla-core-gemini"
-        }
-    }
-
     var label: String {
-        "\(title) (\(subtitle))"
+        title
     }
 
     var serverURL: String {
