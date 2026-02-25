@@ -13,7 +13,6 @@ enum AppAction: Sendable {
     case dialCountryChanged(String)
 
     // Call lifecycle actions
-    case setCallMode(CallMode)
     case initiateCall(to: String)
     case callInitiated(callSid: String)
     case callStatusUpdated(CallStatus)
@@ -45,27 +44,19 @@ enum AppAction: Sendable {
 
     // Agent WebSocket
     case connectAgentWebSocket(callSid: String)
-    case agentWebSocketConnected
-    case agentWebSocketDisconnected
     case agentWebSocketError(AppError)
 
     // Audio actions
     case toggleMute
     case toggleSpeaker
     case inputAudioLevelUpdated(Float)
-    case outputAudioLevelUpdated(Float)
     case receivingAudioChanged(Bool)
 
     // Audio pipeline actions
     case startAudioCapture
-    case stopAudioCapture
-    case audioCaptureFailed(AppError)
 
     // WebSocket actions
     case connectWebSocket(callSid: String)
-    case webSocketConnected
-    case webSocketDisconnected
-    case webSocketError(AppError)
 
     // Timer actions
     case callTimerTick

@@ -18,11 +18,6 @@ struct CallResponse: Codable, Sendable {
     let status: String
 }
 
-struct CallStatusResponse: Codable, Sendable {
-    let call_sid: String
-    let status: String
-}
-
 struct AgentCallRequest: Codable, Sendable {
     let to: String
     let from: String?

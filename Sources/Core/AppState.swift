@@ -28,13 +28,10 @@ struct AppState: Equatable {
     var isMuted: Bool = false
     var isSpeaker: Bool = false
     var inputAudioLevel: Float = 0.0
-    var outputAudioLevel: Float = 0.0
     var isReceivingAudio: Bool = false
 
     // UI state
-    var dialpadInput: String = ""
     var activeScreen: ActiveScreen = .dialer
-    var callMode: CallMode = .translation
 
     // Agent mode
     var agentPrompt: String = ""
@@ -111,11 +108,6 @@ enum ActiveScreen: Equatable, Hashable, Sendable {
     case agentSetup
     case agentCall
     case settings
-}
-
-enum CallMode: Equatable, Sendable {
-    case translation
-    case agent
 }
 
 enum BackendService: String, CaseIterable, Equatable, Sendable, Identifiable {
