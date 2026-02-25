@@ -54,7 +54,7 @@ struct AgentCallView: View {
                 .background(Color.appSurface)
 
             VStack(spacing: 10) {
-                TextField("Also ask about the lunch program", text: Binding(
+                TextField("Add instruction for the agent", text: Binding(
                     get: { state.agentMidCallInput },
                     set: { store.dispatch(.agentMidCallInputChanged($0)) }
                 ))
