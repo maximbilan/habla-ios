@@ -31,7 +31,11 @@ Redux-like unidirectional data flow with SwiftUI:
 
 3. Configure backend URL and optional request auth token generation:
    - Copy `.env.example` to `.env`
-   - Set `HABLA_BACKEND_URL` (example: `http://192.168.1.x:8000`)
+   - Set:
+     - `HABLA_BACKEND_URL_NOVA` (example: `http://192.168.1.x:8000`)
+     - `HABLA_BACKEND_URL_GEMINI` (example: `http://192.168.1.x:8080`)
+   - Optional legacy fallback: `HABLA_BACKEND_URL`
+   - Optional default backend override: `HABLA_BACKEND_URL_DEFAULT`
    - Optional but recommended for protected backend routes:
      - Set `HABLA_SECRET`
      - Set `HABLA_APP_BUNDLE_ID` (default: `com.maximbilan.habla-ios`)
@@ -43,9 +47,9 @@ Redux-like unidirectional data flow with SwiftUI:
 ## How It Works
 
 1. User selects a destination country code (or `Any Country (+)`) in the dialer
-2. User selects translation languages in Settings (`I speak` and `They speak`)
+2. User selects translation languages, backend service, and voice gender in Settings
 3. User dials a phone number and taps Call
-4. App calls `POST /call` with `source_language` and `target_language`
+4. App calls `POST /call` with `source_language`, `target_language`, and `voice_gender`
 5. App opens a WebSocket to `/ws/{call_sid}`
 6. Mic audio (PCM 16-bit, 16kHz, mono) streams to backend via WebSocket
 7. Backend translates source→target via Nova 2 Sonic and sends to phone

@@ -267,6 +267,14 @@ func appReducer(state: inout AppState, action: AppAction) {
             UserDefaults.standard.set(replacement, forKey: AppState.translationSourceLanguageKey)
         }
 
+    case .backendServiceChanged(let service):
+        state.selectedBackendService = service
+        UserDefaults.standard.set(service.rawValue, forKey: AppState.selectedBackendServiceKey)
+
+    case .voiceGenderChanged(let voiceGender):
+        state.selectedVoiceGender = voiceGender
+        UserDefaults.standard.set(voiceGender.rawValue, forKey: AppState.selectedVoiceGenderKey)
+
     case .clearError:
         state.callError = nil
 

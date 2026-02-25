@@ -13,6 +13,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
             let calleeLanguage = state.translationTargetLanguage
+            let voiceGender = state.selectedVoiceGender
 
             Task {
                 do {
@@ -22,6 +23,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                         prompt: prompt,
                         userName: userName,
                         language: calleeLanguage,
+                        voiceGender: voiceGender,
                         serverURL: serverURL
                     )
 

@@ -17,6 +17,7 @@ actor NetworkService {
         from: String?,
         sourceLanguage: String,
         targetLanguage: String,
+        voiceGender: VoiceGender,
         serverURL: String
     ) async throws -> CallResponse {
         guard let url = URL(string: "\(serverURL)/call") else {
@@ -32,7 +33,8 @@ actor NetworkService {
                 to: phoneNumber,
                 from: from,
                 source_language: sourceLanguage,
-                target_language: targetLanguage
+                target_language: targetLanguage,
+                voice_gender: voiceGender
             )
         )
         request.timeoutInterval = 30

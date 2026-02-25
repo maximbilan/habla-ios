@@ -2,8 +2,10 @@ import Foundation
 
 // Auto-generated. Do not edit.
 enum AppConfig {
-    static let backendURL = "http://localhost:8000"
-    static let backendAuthToken = "token"
+    static let backendURL = ""
+    static let backendURLNova = ""
+    static let backendURLGemini = ""
+    static let backendAuthToken = ""
 }
 
 enum BackendRequestAuth {

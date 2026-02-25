@@ -13,6 +13,7 @@ actor AgentNetworkService {
         prompt: String,
         userName: String,
         language: String,
+        voiceGender: VoiceGender,
         serverURL: String
     ) async throws -> AgentCallResponse {
         guard let url = URL(string: "\(serverURL)/agent/call") else {
@@ -30,7 +31,8 @@ actor AgentNetworkService {
                 from: from,
                 prompt: prompt,
                 user_name: userName,
-                language: language
+                language: language,
+                voice_gender: voiceGender
             )
         )
 
