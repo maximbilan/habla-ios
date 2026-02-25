@@ -30,6 +30,7 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                     let records = models.prefix(maxStoredRecords).map { $0.toCallRecord() }
                     dispatch(.callHistoryLoaded(records))
                 } catch {
+                    // Keep call UI responsive even if persistence fails.
                 }
             }
 
@@ -49,6 +50,7 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                     try context.save()
                     dispatch(.loadCallHistory)
                 } catch {
+                    // Keep call UI responsive even if persistence fails.
                 }
             }
 

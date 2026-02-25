@@ -25,7 +25,6 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
                 do {
                     try await ws.connect(callSid: callSid, serverURL: serverURL)
                     await MainActor.run {
-                        dispatch(.webSocketConnected)
                         dispatch(.callStatusUpdated(.connected))
                     }
 
@@ -43,13 +42,12 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
                     }
 
                     await MainActor.run {
-                        dispatch(.webSocketDisconnected)
                         dispatch(.callEnded)
                     }
                 } catch {
                     let appError = (error as? AppError) ?? .webSocketError(error.localizedDescription)
                     await MainActor.run {
-                        dispatch(.webSocketError(appError))
+                        dispatch(.callFailed(appError))
                     }
                 }
             }

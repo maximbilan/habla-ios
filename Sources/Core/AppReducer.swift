@@ -7,9 +7,6 @@ import Foundation
 
 func appReducer(state: inout AppState, action: AppAction) {
     switch action {
-    case .setCallMode(let mode):
-        state.callMode = mode
-
     case .dialCountryChanged(let countryCode):
         let oldCountryCode = state.selectedDialCountryCode
         state.selectedDialCountryCode = countryCode
@@ -39,7 +36,6 @@ func appReducer(state: inout AppState, action: AppAction) {
         }
 
     case .initiateCall:
-        state.callMode = .translation
         state.callStatus = .initiating
         state.callError = nil
         state.callDuration = 0
@@ -74,7 +70,6 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.agentUserName = name
 
     case .initiateAgentCall:
-        state.callMode = .agent
         state.callStatus = .initiating
         state.callError = nil
         state.callDuration = 0
@@ -136,9 +131,6 @@ func appReducer(state: inout AppState, action: AppAction) {
 
     case .inputAudioLevelUpdated(let level):
         state.inputAudioLevel = level
-
-    case .outputAudioLevelUpdated(let level):
-        state.outputAudioLevel = level
 
     case .receivingAudioChanged(let receiving):
         state.isReceivingAudio = receiving
@@ -278,20 +270,8 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .clearError:
         state.callError = nil
 
-    case .agentWebSocketConnected:
-        break
-
-    case .agentWebSocketDisconnected:
-        break
-
     case .agentWebSocketError(let error):
         state.callError = error
-
-    case .webSocketConnected:
-        break
-
-    case .webSocketDisconnected:
-        break
 
     default:
         break

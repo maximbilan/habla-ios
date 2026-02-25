@@ -79,32 +79,6 @@ actor NetworkService {
         }
     }
 
-    func getCallStatus(callSid: String, serverURL: String) async throws -> CallStatusResponse {
-        guard let url = URL(string: "\(serverURL)/call/\(callSid)/status") else {
-            throw AppError.networkError("Invalid server URL")
-        }
-
-        var request = URLRequest(url: url)
-        request.httpMethod = "GET"
-        BackendRequestAuth.apply(to: &request)
-        request.timeoutInterval = 10
-
-        let (data, response) = try await session.data(for: request)
-        let httpResponse = try validatedHTTPResponse(response)
-
-        guard (200...299).contains(httpResponse.statusCode) else {
-            throw AppError.networkError(
-                serverErrorMessage(
-                    statusCode: httpResponse.statusCode,
-                    data: data,
-                    fallback: "Status check failed"
-                )
-            )
-        }
-
-        return try JSONDecoder().decode(CallStatusResponse.self, from: data)
-    }
-
     private func validatedHTTPResponse(_ response: URLResponse) throws -> HTTPURLResponse {
         guard let httpResponse = response as? HTTPURLResponse else {
             throw AppError.networkError("Invalid response")

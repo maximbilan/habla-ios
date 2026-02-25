@@ -119,7 +119,6 @@ struct AgentSetupView: View {
                     }
 
                     Button {
-                        store.dispatch(.setCallMode(.agent))
                         store.dispatch(
                             .initiateAgentCall(
                                 to: state.phoneNumber,

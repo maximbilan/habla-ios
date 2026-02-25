@@ -46,12 +46,12 @@ final class AudioMiddleware: Middleware, @unchecked Sendable {
                 } catch {
                     let appError = (error as? AppError) ?? .audioError(error.localizedDescription)
                     await MainActor.run {
-                        dispatch(.audioCaptureFailed(appError))
+                        dispatch(.callFailed(appError))
                     }
                 }
             }
 
-        case .stopAudioCapture, .endCall, .callFailed, .callEnded, .webSocketDisconnected:
+        case .endCall, .callFailed, .callEnded:
             Task {
                 await audioService.stopCapture()
             }

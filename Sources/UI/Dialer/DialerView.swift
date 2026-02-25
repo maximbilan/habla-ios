@@ -136,14 +136,12 @@ struct DialerView: View {
                             size: metrics.callButtonSize,
                             iconSize: metrics.callButtonIconSize
                         ) {
-                            store.dispatch(.setCallMode(.translation))
                             store.dispatch(.initiateCall(to: state.phoneNumber))
                         }
 
                         Button {
                             let generator = UIImpactFeedbackGenerator(style: .medium)
                             generator.impactOccurred()
-                            store.dispatch(.setCallMode(.agent))
                             store.dispatch(.navigateTo(.agentSetup))
                         } label: {
                             Text("🤖 Agent")

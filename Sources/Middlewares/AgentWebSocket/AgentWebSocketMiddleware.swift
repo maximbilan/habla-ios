@@ -28,19 +28,12 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
             Task {
                 do {
                     try await ws.connect(callSid: callSid, serverURL: serverURL)
-                    await MainActor.run {
-                        dispatch(.agentWebSocketConnected)
-                    }
 
                     await ws.receiveLoop { [weak self] message in
                         guard let self else { return }
                         Task { @MainActor in
                             self.handleMessage(message, dispatch: dispatch)
                         }
-                    }
-
-                    await MainActor.run {
-                        dispatch(.agentWebSocketDisconnected)
                     }
                 } catch {
                     let appError = (error as? AppError) ?? .webSocketError(error.localizedDescription)

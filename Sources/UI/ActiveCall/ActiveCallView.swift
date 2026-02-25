@@ -49,7 +49,6 @@ struct ActiveCallView: View {
             // Audio visualizer
             AudioVisualizerView(
                 inputLevel: state.inputAudioLevel,
-                outputLevel: state.outputAudioLevel,
                 isReceivingAudio: state.isReceivingAudio,
                 isConnected: state.callStatus == .connected
             )

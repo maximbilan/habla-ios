@@ -7,11 +7,8 @@ import SwiftUI
 
 struct AudioVisualizerView: View {
     let inputLevel: Float
-    let outputLevel: Float
     let isReceivingAudio: Bool
     let isConnected: Bool
-
-    @State private var animationPhase: Double = 0
 
     var body: some View {
         VStack(spacing: 16) {
@@ -42,17 +39,17 @@ struct AudioVisualizerView: View {
 
             // Pulsing circle visualizer
             ZStack {
-                // Outer ring - output level
+                // Outer ring
                 Circle()
                     .stroke(
                         Color.appAccent.opacity(0.15),
                         lineWidth: 2
                     )
                     .frame(
-                        width: 140 + CGFloat(outputLevel) * 40,
-                        height: 140 + CGFloat(outputLevel) * 40
+                        width: 140 + CGFloat(inputLevel) * 40,
+                        height: 140 + CGFloat(inputLevel) * 40
                     )
-                    .animation(.easeInOut(duration: 0.15), value: outputLevel)
+                    .animation(.easeInOut(duration: 0.15), value: inputLevel)
 
                 // Middle ring
                 Circle()
@@ -80,14 +77,13 @@ struct AudioVisualizerView: View {
                         )
                     )
                     .frame(width: 80, height: 80)
-                    .scaleEffect(1.0 + CGFloat(max(inputLevel, outputLevel)) * 0.3)
+                    .scaleEffect(1.0 + CGFloat(inputLevel) * 0.3)
                     .animation(.easeInOut(duration: 0.15), value: inputLevel)
-                    .animation(.easeInOut(duration: 0.15), value: outputLevel)
 
                 // Waveform bars
                 HStack(spacing: 3) {
                     ForEach(0..<7, id: \.self) { index in
-                        let level = isConnected ? max(inputLevel, outputLevel) : 0
+                        let level = isConnected ? inputLevel : 0
                         let barHeight = barHeight(for: index, level: CGFloat(level))
                         RoundedRectangle(cornerRadius: 2)
                             .fill(Color.appAccent)

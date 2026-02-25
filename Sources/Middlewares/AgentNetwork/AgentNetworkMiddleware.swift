@@ -56,6 +56,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                 do {
                     try await networkService.endAgentCall(callSid: callSid, serverURL: serverURL)
                 } catch {
+                    // End the local call flow even if remote hangup fails.
                 }
 
                 let record = CallRecord(
