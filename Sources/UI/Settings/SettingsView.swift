@@ -85,6 +85,36 @@ struct SettingsView: View {
                     Divider()
                         .background(Color.appSurface)
 
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("Voice & Backend")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.appTextSecondary)
+                            .textCase(.uppercase)
+
+                        backendPickerRow(
+                            selectedService: state.selectedBackendService,
+                            onSelect: { service in
+                                store.dispatch(.backendServiceChanged(service))
+                            }
+                        )
+
+                        Text(state.serverURL)
+                            .font(.system(size: 12, weight: .regular, design: .monospaced))
+                            .foregroundColor(.appTextSecondary)
+                            .lineLimit(2)
+                            .truncationMode(.middle)
+
+                        voicePickerRow(
+                            selectedVoiceGender: state.selectedVoiceGender,
+                            onSelect: { voiceGender in
+                                store.dispatch(.voiceGenderChanged(voiceGender))
+                            }
+                        )
+                    }
+
+                    Divider()
+                        .background(Color.appSurface)
+
                     // Caller ID section
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Caller ID")
@@ -146,6 +176,68 @@ struct SettingsView: View {
                 Spacer()
 
                 Text(TranslationLanguageCatalog.languageLabelWithEmoji(for: selectedCode))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.appTextPrimary)
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.appTextSecondary)
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
+        }
+    }
+
+    private func backendPickerRow(
+        selectedService: BackendService,
+        onSelect: @escaping (BackendService) -> Void
+    ) -> some View {
+        Menu {
+            ForEach(BackendService.allCases) { service in
+                Button(service.label) {
+                    onSelect(service)
+                }
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Text("Backend service")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+
+                Spacer()
+
+                Text(selectedService.title)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.appTextPrimary)
+
+                Image(systemName: "chevron.down")
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(.appTextSecondary)
+            }
+            .padding(12)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
+        }
+    }
+
+    private func voicePickerRow(
+        selectedVoiceGender: VoiceGender,
+        onSelect: @escaping (VoiceGender) -> Void
+    ) -> some View {
+        Menu {
+            ForEach(VoiceGender.allCases) { voiceGender in
+                Button(voiceGender.title) {
+                    onSelect(voiceGender)
+                }
+            }
+        } label: {
+            HStack(spacing: 10) {
+                Text("Voice")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+
+                Spacer()
+
+                Text(selectedVoiceGender.title)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(.appTextPrimary)
 

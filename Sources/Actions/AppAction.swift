@@ -98,6 +98,8 @@ enum AppAction: Sendable {
     // Translation settings
     case translationSourceLanguageChanged(String)
     case translationTargetLanguageChanged(String)
+    case backendServiceChanged(BackendService)
+    case voiceGenderChanged(VoiceGender)
 
     // Error handling
     case clearError

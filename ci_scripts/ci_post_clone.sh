@@ -20,15 +20,44 @@ read_env_var() {
   echo "$value"
 }
 
-# Prefer Xcode Cloud environment variable, fallback to local .env.
-BACKEND_URL="${HABLA_BACKEND_URL:-}"
-if [[ -z "$BACKEND_URL" ]]; then
-  BACKEND_URL="$(read_env_var HABLA_BACKEND_URL)"
+# Prefer Xcode Cloud environment variables, fallback to local .env.
+BACKEND_URL_FALLBACK="${HABLA_BACKEND_URL:-}"
+if [[ -z "$BACKEND_URL_FALLBACK" ]]; then
+  BACKEND_URL_FALLBACK="$(read_env_var HABLA_BACKEND_URL)"
 fi
 
-if [[ -z "$BACKEND_URL" ]]; then
-  echo "❌ Missing HABLA_BACKEND_URL. Set it in Xcode Cloud env vars or .env."
+BACKEND_URL_NOVA="${HABLA_BACKEND_URL_NOVA:-}"
+if [[ -z "$BACKEND_URL_NOVA" ]]; then
+  BACKEND_URL_NOVA="$(read_env_var HABLA_BACKEND_URL_NOVA)"
+fi
+if [[ -z "$BACKEND_URL_NOVA" ]]; then
+  BACKEND_URL_NOVA="$BACKEND_URL_FALLBACK"
+fi
+
+BACKEND_URL_GEMINI="${HABLA_BACKEND_URL_GEMINI:-}"
+if [[ -z "$BACKEND_URL_GEMINI" ]]; then
+  BACKEND_URL_GEMINI="$(read_env_var HABLA_BACKEND_URL_GEMINI)"
+fi
+if [[ -z "$BACKEND_URL_GEMINI" ]]; then
+  BACKEND_URL_GEMINI="$BACKEND_URL_FALLBACK"
+fi
+
+if [[ -z "$BACKEND_URL_NOVA" && -z "$BACKEND_URL_GEMINI" ]]; then
+  echo "❌ Missing backend URL configuration."
+  echo "Set HABLA_BACKEND_URL_NOVA and HABLA_BACKEND_URL_GEMINI (or legacy HABLA_BACKEND_URL)."
   exit 1
+fi
+
+BACKEND_URL_DEFAULT="${HABLA_BACKEND_URL_DEFAULT:-}"
+if [[ -z "$BACKEND_URL_DEFAULT" ]]; then
+  BACKEND_URL_DEFAULT="$(read_env_var HABLA_BACKEND_URL_DEFAULT)"
+fi
+if [[ -z "$BACKEND_URL_DEFAULT" ]]; then
+  if [[ -n "$BACKEND_URL_GEMINI" ]]; then
+    BACKEND_URL_DEFAULT="$BACKEND_URL_GEMINI"
+  else
+    BACKEND_URL_DEFAULT="$BACKEND_URL_NOVA"
+  fi
 fi
 
 HABLA_SECRET_VALUE="${HABLA_SECRET:-}"
@@ -68,7 +97,9 @@ import Foundation
 // Auto-generated. Do not edit.
 // Generated on $(date)
 enum AppConfig {
-    static let backendURL = "$BACKEND_URL"
+    static let backendURL = "$BACKEND_URL_DEFAULT"
+    static let backendURLNova = "$BACKEND_URL_NOVA"
+    static let backendURLGemini = "$BACKEND_URL_GEMINI"
     static let backendAuthToken = "$AUTH_TOKEN"
 }
 

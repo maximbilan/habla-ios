@@ -9,6 +9,8 @@ struct AppState: Equatable {
     static let dialCountryCodeKey = "dialCountryCode"
     static let translationSourceLanguageKey = "translationSourceLanguage"
     static let translationTargetLanguageKey = "translationTargetLanguage"
+    static let selectedBackendServiceKey = "selectedBackendService"
+    static let selectedVoiceGenderKey = "selectedVoiceGender"
 
     // Call state
     var callStatus: CallStatus = .idle
@@ -42,7 +44,15 @@ struct AppState: Equatable {
     var agentMidCallInput: String = ""
 
     // Settings
-    var serverURL: String = AppConfig.backendURL
+    var selectedBackendService: BackendService = BackendService(
+        rawValue: UserDefaults.standard.string(forKey: AppState.selectedBackendServiceKey) ?? ""
+    ) ?? BackendService.defaultSelection
+    var selectedVoiceGender: VoiceGender = VoiceGender(
+        rawValue: UserDefaults.standard.string(forKey: AppState.selectedVoiceGenderKey) ?? ""
+    ) ?? .female
+    var serverURL: String {
+        selectedBackendService.serverURL
+    }
     var translationSourceLanguage: String = UserDefaults.standard.string(forKey: AppState.translationSourceLanguageKey)
         ?? TranslationLanguageCatalog.defaultSource.code
     var translationTargetLanguage: String = UserDefaults.standard.string(forKey: AppState.translationTargetLanguageKey)
@@ -106,6 +116,82 @@ enum ActiveScreen: Equatable, Hashable, Sendable {
 enum CallMode: Equatable, Sendable {
     case translation
     case agent
+}
+
+enum BackendService: String, CaseIterable, Equatable, Sendable, Identifiable {
+    case nova
+    case gemini
+
+    var id: String { rawValue }
+
+    static var defaultSelection: BackendService {
+        let normalizedDefault = AppConfig.backendURL.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedNova = AppConfig.backendURLNova.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedGemini = AppConfig.backendURLGemini.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        if !normalizedDefault.isEmpty
+            && normalizedDefault == normalizedGemini
+            && normalizedDefault != normalizedNova {
+            return .gemini
+        }
+
+        return .nova
+    }
+
+    var title: String {
+        switch self {
+        case .nova:
+            return "Nova 2 Sonic"
+        case .gemini:
+            return "Gemini"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .nova:
+            return "habla-core"
+        case .gemini:
+            return "habla-core-gemini"
+        }
+    }
+
+    var label: String {
+        "\(title) (\(subtitle))"
+    }
+
+    var serverURL: String {
+        let normalizedNova = AppConfig.backendURLNova.trimmingCharacters(in: .whitespacesAndNewlines)
+        let normalizedGemini = AppConfig.backendURLGemini.trimmingCharacters(in: .whitespacesAndNewlines)
+        let fallback = AppConfig.backendURL.trimmingCharacters(in: .whitespacesAndNewlines)
+
+        switch self {
+        case .nova:
+            if !normalizedNova.isEmpty { return normalizedNova }
+            if !fallback.isEmpty { return fallback }
+            return normalizedGemini
+        case .gemini:
+            if !normalizedGemini.isEmpty { return normalizedGemini }
+            if !fallback.isEmpty { return fallback }
+            return normalizedNova
+        }
+    }
+}
+
+enum VoiceGender: String, CaseIterable, Codable, Equatable, Sendable, Identifiable {
+    case female
+    case male
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .female:
+            return "Female"
+        case .male:
+            return "Male"
+        }
+    }
 }
 
 enum AgentStatus: Equatable, Sendable {

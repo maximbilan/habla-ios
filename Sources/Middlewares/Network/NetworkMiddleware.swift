@@ -19,6 +19,7 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
             let fromNumber = resolveCallerId(state: state)
             let sourceLanguage = state.translationSourceLanguage
             let targetLanguage = state.translationTargetLanguage
+            let voiceGender = state.selectedVoiceGender
             Task {
                 do {
                     let response = try await networkService.initiateCall(
@@ -26,6 +27,7 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
                         from: fromNumber,
                         sourceLanguage: sourceLanguage,
                         targetLanguage: targetLanguage,
+                        voiceGender: voiceGender,
                         serverURL: serverURL
                     )
                     await MainActor.run {

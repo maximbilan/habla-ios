@@ -10,6 +10,7 @@ struct CallRequest: Codable, Sendable {
     let from: String?
     let source_language: String
     let target_language: String
+    let voice_gender: VoiceGender
 }
 
 struct CallResponse: Codable, Sendable {
@@ -28,6 +29,7 @@ struct AgentCallRequest: Codable, Sendable {
     let prompt: String
     let user_name: String
     let language: String
+    let voice_gender: VoiceGender
 }
 
 struct AgentCallResponse: Codable, Sendable {
