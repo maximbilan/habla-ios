@@ -29,14 +29,40 @@ final class CallerIdMiddleware: Middleware, @unchecked Sendable {
                         serverURL: serverURL
                     )
 
-                    if let code = response.validationCode, !code.isEmpty {
-                        await MainActor.run {
-                            dispatch(.callerIdVerificationStarted(validationCode: code))
+                    switch response.status {
+                    case "verification_started":
+                        if let code = response.validationCode, !code.isEmpty {
+                            await MainActor.run {
+                                dispatch(.callerIdVerificationStarted(validationCode: code))
+                            }
+                        } else {
+                            await MainActor.run {
+                                dispatch(.callerIdVerificationFailed(.networkError("Verification code is missing")))
+                            }
                         }
-                    } else {
-                        let message = response.message ?? "Verification code is missing"
+
+                    case "already_verified":
+                        await MainActor.run {
+                            dispatch(.callerIdVerificationCompleted)
+                            dispatch(.loadVerifiedCallerIds)
+                        }
+
+                    case "error":
+                        let message = response.message ?? "Unable to start verification"
                         await MainActor.run {
                             dispatch(.callerIdVerificationFailed(.networkError(message)))
+                        }
+
+                    default:
+                        if let code = response.validationCode, !code.isEmpty {
+                            await MainActor.run {
+                                dispatch(.callerIdVerificationStarted(validationCode: code))
+                            }
+                        } else {
+                            let message = response.message ?? "Unexpected verification response: \(response.status)"
+                            await MainActor.run {
+                                dispatch(.callerIdVerificationFailed(.networkError(message)))
+                            }
                         }
                     }
                 } catch {
