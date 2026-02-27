@@ -15,6 +15,7 @@ actor AgentWebSocketService {
 
         var request = URLRequest(url: url)
         BackendRequestAuth.apply(to: &request)
+        BackendRequestContext.apply(to: &request)
 
         let session = URLSession(configuration: .default)
         webSocketTask = session.webSocketTask(with: request)
