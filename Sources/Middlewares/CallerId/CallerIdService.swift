@@ -20,6 +20,7 @@ actor CallerIdService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         BackendRequestAuth.apply(to: &request)
+        BackendRequestContext.apply(to: &request)
         request.timeoutInterval = 30
 
         let payload = CallerIdStartVerifyRequest(
@@ -46,6 +47,7 @@ actor CallerIdService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         BackendRequestAuth.apply(to: &request)
+        BackendRequestContext.apply(to: &request)
         request.timeoutInterval = 15
 
         let (data, response) = try await session.data(for: request)
@@ -65,6 +67,7 @@ actor CallerIdService {
         var request = URLRequest(url: url)
         request.httpMethod = "GET"
         BackendRequestAuth.apply(to: &request)
+        BackendRequestContext.apply(to: &request)
         request.timeoutInterval = 20
 
         let (data, response) = try await session.data(for: request)
@@ -84,6 +87,7 @@ actor CallerIdService {
         var request = URLRequest(url: url)
         request.httpMethod = "DELETE"
         BackendRequestAuth.apply(to: &request)
+        BackendRequestContext.apply(to: &request)
         request.timeoutInterval = 20
 
         let (data, response) = try await session.data(for: request)

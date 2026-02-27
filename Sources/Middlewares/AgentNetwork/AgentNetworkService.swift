@@ -24,6 +24,7 @@ actor AgentNetworkService {
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         BackendRequestAuth.apply(to: &request)
+        BackendRequestContext.apply(to: &request)
         request.timeoutInterval = 30
         request.httpBody = try JSONEncoder().encode(
             AgentCallRequest(
@@ -59,6 +60,7 @@ actor AgentNetworkService {
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         BackendRequestAuth.apply(to: &request)
+        BackendRequestContext.apply(to: &request)
         request.timeoutInterval = 15
 
         let (data, response) = try await session.data(for: request)
