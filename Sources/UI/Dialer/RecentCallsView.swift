@@ -68,7 +68,7 @@ private struct RecentCallRow: View {
     let onSummaryTapped: (CallRecord) -> Void
 
     private var hasMetaBadges: Bool {
-        !call.verifiedFacts.isEmpty || !call.conversation.isEmpty || call.goalResult != nil
+        !call.verifiedFacts.isEmpty || !call.conversation.isEmpty
     }
 
     var body: some View {
@@ -125,14 +125,6 @@ private struct RecentCallRow: View {
                                     text: "\(call.conversation.count) turns",
                                     foreground: .appTextSecondary,
                                     background: Color.appSurface
-                                )
-                            }
-
-                            if let goal = call.goalResult {
-                                CallMetaBadge(
-                                    text: goal.success ? "goal done" : "goal \(Int((goal.completionRate * 100).rounded()))%",
-                                    foreground: goal.success ? .green : .orange,
-                                    background: (goal.success ? Color.green : Color.orange).opacity(0.14)
                                 )
                             }
                         }

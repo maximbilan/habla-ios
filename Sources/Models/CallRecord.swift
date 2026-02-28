@@ -13,7 +13,6 @@ struct CallRecord: Identifiable, Equatable, Sendable, Codable {
     let status: String
     let verifiedFacts: [VerifiedFact]
     let conversation: [ConversationTurn]
-    let goalResult: GoalResultSummary?
 
     init(
         id: UUID = UUID(),
@@ -22,8 +21,7 @@ struct CallRecord: Identifiable, Equatable, Sendable, Codable {
         duration: TimeInterval = 0,
         status: String = "completed",
         verifiedFacts: [VerifiedFact] = [],
-        conversation: [ConversationTurn] = [],
-        goalResult: GoalResultSummary? = nil
+        conversation: [ConversationTurn] = []
     ) {
         self.id = id
         self.phoneNumber = phoneNumber
@@ -32,6 +30,5 @@ struct CallRecord: Identifiable, Equatable, Sendable, Codable {
         self.status = status
         self.verifiedFacts = verifiedFacts
         self.conversation = conversation
-        self.goalResult = goalResult
     }
 }

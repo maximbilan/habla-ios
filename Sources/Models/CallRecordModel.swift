@@ -32,8 +32,7 @@ final class CallRecordModel {
     }
 
     func toCallRecord(
-        conversation: [ConversationTurn] = [],
-        goalResult: GoalResultSummary? = nil
+        conversation: [ConversationTurn] = []
     ) -> CallRecord {
         CallRecord(
             id: id,
@@ -42,8 +41,7 @@ final class CallRecordModel {
             duration: duration,
             status: status,
             verifiedFacts: decodeVerifiedFacts(verifiedFactsData),
-            conversation: conversation,
-            goalResult: goalResult
+            conversation: conversation
         )
     }
 
