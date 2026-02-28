@@ -56,7 +56,7 @@ extension TranscriptEntry {
         ConversationTurn(
             id: id,
             role: role == .agent ? .agent : .callee,
-            text: textEs,
+            text: textOriginal,
             translatedText: textEn,
             timestamp: timestamp
         )

@@ -12,7 +12,7 @@ struct TranscriptBubbleView: View {
                     .font(.caption)
                     .foregroundColor(.appTextSecondary)
 
-                Text(entry.textEs)
+                Text(entry.textOriginal)
                     .font(.body)
                     .foregroundColor(.appTextPrimary)
 
@@ -42,7 +42,7 @@ struct TranscriptBubbleView: View {
         guard let textEn = entry.textEn?.trimmingCharacters(in: .whitespacesAndNewlines), !textEn.isEmpty else {
             return nil
         }
-        if normalized(textEn) == normalized(entry.textEs) {
+        if normalized(textEn) == normalized(entry.textOriginal) {
             return nil
         }
         return textEn
