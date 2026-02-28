@@ -23,14 +23,10 @@ enum AppAction: Sendable {
     // Agent mode actions
     case agentPromptChanged(String)
     case agentUserNameChanged(String)
-    case agentGoalObjectiveChanged(String)
-    case agentGoalRequiredFieldsChanged(String)
     case initiateAgentCall(
         to: String,
         prompt: String,
-        userName: String,
-        goalObjective: String,
-        goalRequiredFields: [String]
+        userName: String
     )
     case agentCallInitiated(callSid: String)
     case agentCallFailed(AppError)
@@ -42,8 +38,6 @@ enum AppAction: Sendable {
     case agentStatusUpdated(AgentStatus)
     case criticalConfirmationReceived(CriticalConfirmation)
     case verifiedFactsSummaryReceived([VerifiedFact])
-    case goalProgressReceived(GoalProgressPayload)
-    case goalResultReceived(GoalResultSummary)
     case clearCriticalConfirmation
 
     // Agent mid-call instructions

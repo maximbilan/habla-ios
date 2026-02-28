@@ -12,8 +12,6 @@ actor AgentNetworkService {
         from: String?,
         prompt: String,
         userName: String,
-        goalObjective: String,
-        goalRequiredFields: [String],
         language: String,
         voiceGender: VoiceGender,
         serverURL: String
@@ -28,19 +26,6 @@ actor AgentNetworkService {
         BackendRequestAuth.apply(to: &request)
         BackendRequestContext.apply(to: &request)
         request.timeoutInterval = 30
-        let normalizedGoalObjective = goalObjective.trimmingCharacters(in: .whitespacesAndNewlines)
-        let normalizedGoalFields = goalRequiredFields
-            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
-            .filter { !$0.isEmpty }
-        let goalSchema: AgentGoalSchema?
-        if normalizedGoalObjective.isEmpty && normalizedGoalFields.isEmpty {
-            goalSchema = nil
-        } else {
-            goalSchema = AgentGoalSchema(
-                objective: normalizedGoalObjective,
-                required_fields: normalizedGoalFields
-            )
-        }
         request.httpBody = try JSONEncoder().encode(
             AgentCallRequest(
                 to: phoneNumber,
@@ -48,8 +33,7 @@ actor AgentNetworkService {
                 prompt: prompt,
                 user_name: userName,
                 language: language,
-                voice_gender: voiceGender,
-                goal_schema: goalSchema
+                voice_gender: voiceGender
             )
         )
 

@@ -43,18 +43,6 @@ struct AgentCallView: View {
                 .padding(.bottom, 8)
             }
 
-            if let progress = state.agentGoalProgress {
-                GoalProgressCard(progress: progress)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 8)
-            }
-
-            if let result = state.agentGoalResult {
-                GoalResultCompactCard(result: result)
-                    .padding(.horizontal, 12)
-                    .padding(.bottom, 8)
-            }
-
             Divider()
                 .background(Color.appSurface)
 

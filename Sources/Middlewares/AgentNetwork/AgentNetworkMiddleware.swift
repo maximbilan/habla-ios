@@ -12,9 +12,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
         case .initiateAgentCall(
             let phoneNumber,
             let prompt,
-            let userName,
-            let goalObjective,
-            let goalRequiredFields
+            let userName
         ):
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
@@ -34,8 +32,6 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                         from: fromNumber,
                         prompt: personalizedPrompt,
                         userName: userName,
-                        goalObjective: goalObjective,
-                        goalRequiredFields: goalRequiredFields,
                         language: calleeLanguage,
                         voiceGender: voiceGender,
                         serverURL: serverURL
@@ -66,7 +62,6 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
             let phoneNumber = state.phoneNumber
             let duration = state.callDuration
             let verifiedFacts = state.verifiedFactsSummary
-            let goalResult = state.agentGoalResult
             let conversation = state.agentTranscript
                 .map { $0.asConversationTurn() }
                 .sorted { $0.timestamp < $1.timestamp }
@@ -83,8 +78,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                     duration: duration,
                     status: "completed",
                     verifiedFacts: verifiedFacts,
-                    conversation: conversation,
-                    goalResult: goalResult
+                    conversation: conversation
                 )
                 await MainActor.run {
                     dispatch(.saveCallRecord(record))
