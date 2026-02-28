@@ -13,7 +13,7 @@ final class CallRecordModel {
     var startedAt: Date
     var duration: TimeInterval
     var status: String
-    var verifiedFactsData: Data?
+    var verifiedFactsData: Data
 
     init(
         id: UUID = UUID(),
@@ -21,7 +21,7 @@ final class CallRecordModel {
         startedAt: Date = Date(),
         duration: TimeInterval = 0,
         status: String = "completed",
-        verifiedFactsData: Data? = nil
+        verifiedFactsData: Data = Data()
     ) {
         self.id = id
         self.phoneNumber = phoneNumber
@@ -46,8 +46,8 @@ final class CallRecordModel {
         (try? JSONEncoder().encode(facts)) ?? Data()
     }
 
-    private func decodeVerifiedFacts(_ data: Data?) -> [VerifiedFact] {
-        guard let data, !data.isEmpty else { return [] }
+    private func decodeVerifiedFacts(_ data: Data) -> [VerifiedFact] {
+        guard !data.isEmpty else { return [] }
         return (try? JSONDecoder().decode([VerifiedFact].self, from: data)) ?? []
     }
 }
