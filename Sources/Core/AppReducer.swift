@@ -375,7 +375,7 @@ private func normalizedTranscriptText(_ text: String) -> String {
 
 private func likelySameTranscriptEntry(_ lhs: TranscriptEntry, _ rhs: TranscriptEntry) -> Bool {
     guard lhs.role == rhs.role else { return false }
-    guard normalizedTranscriptText(lhs.textEs) == normalizedTranscriptText(rhs.textEs) else { return false }
+    guard normalizedTranscriptText(lhs.textOriginal) == normalizedTranscriptText(rhs.textOriginal) else { return false }
     return abs(lhs.timestamp.timeIntervalSince(rhs.timestamp)) <= 2.0
 }
 
@@ -383,7 +383,7 @@ private func mergedTranscriptEntry(existing: TranscriptEntry, incoming: Transcri
     TranscriptEntry(
         id: existing.id,
         role: incoming.role,
-        textEs: incoming.textEs,
+        textOriginal: incoming.textOriginal,
         textEn: incoming.textEn ?? existing.textEn,
         timestamp: existing.timestamp
     )

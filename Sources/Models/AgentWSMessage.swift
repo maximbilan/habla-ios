@@ -3,8 +3,8 @@ import Foundation
 enum AgentWSMessage: Sendable {
     case status(String)
     case agentStatus(String)
-    case transcript(role: String, textEs: String, textEn: String?, timestamp: String)
-    case transcriptUpdate(role: String, textEs: String, textEn: String, timestamp: String)
+    case transcript(role: String, textOriginal: String, textEn: String?, timestamp: String)
+    case transcriptUpdate(role: String, textOriginal: String, textEn: String, timestamp: String)
     case criticalConfirmation(CriticalConfirmation)
     case verifiedFactsSummary([VerifiedFact])
     case goalProgress(GoalProgressPayload)
@@ -15,7 +15,7 @@ private struct AgentWSRawMessage: Decodable, Sendable {
     let type: String
     let status: String?
     let role: String?
-    let text_es: String?
+    let text_original: String?
     let text_en: String?
     let timestamp: String?
     let facts: [VerifiedFact]?
@@ -37,15 +37,15 @@ extension AgentWSMessage {
             return .agentStatus(status)
         case "transcript":
             guard let role = raw.role,
-                  let textEs = raw.text_es,
+                  let textOriginal = raw.text_original,
                   let timestamp = raw.timestamp else { return nil }
-            return .transcript(role: role, textEs: textEs, textEn: raw.text_en, timestamp: timestamp)
+            return .transcript(role: role, textOriginal: textOriginal, textEn: raw.text_en, timestamp: timestamp)
         case "transcript_update":
             guard let role = raw.role,
-                  let textEs = raw.text_es,
+                  let textOriginal = raw.text_original,
                   let textEn = raw.text_en,
                   let timestamp = raw.timestamp else { return nil }
-            return .transcriptUpdate(role: role, textEs: textEs, textEn: textEn, timestamp: timestamp)
+            return .transcriptUpdate(role: role, textOriginal: textOriginal, textEn: textEn, timestamp: timestamp)
         case "critical_confirmation":
             guard let confirmation = try? JSONDecoder().decode(CriticalConfirmation.self, from: data) else {
                 return nil

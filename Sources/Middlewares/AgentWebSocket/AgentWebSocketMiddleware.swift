@@ -95,12 +95,12 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
         case .agentStatus(let status):
             dispatch(.agentStatusUpdated(mapAgentStatus(status)))
 
-        case .transcript(let role, let textEs, let textEn, let timestamp):
-            let entry = makeEntry(role: role, textEs: textEs, textEn: textEn, timestamp: timestamp)
+        case .transcript(let role, let textOriginal, let textEn, let timestamp):
+            let entry = makeEntry(role: role, textOriginal: textOriginal, textEn: textEn, timestamp: timestamp)
             dispatch(.agentTranscriptReceived(entry))
 
-        case .transcriptUpdate(let role, let textEs, let textEn, let timestamp):
-            let entry = makeEntry(role: role, textEs: textEs, textEn: textEn, timestamp: timestamp)
+        case .transcriptUpdate(let role, let textOriginal, let textEn, let timestamp):
+            let entry = makeEntry(role: role, textOriginal: textOriginal, textEn: textEn, timestamp: timestamp)
             dispatch(.agentTranscriptUpdated(entry))
 
         case .criticalConfirmation(let confirmation):
@@ -116,9 +116,9 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
     }
 
     @MainActor
-    private func makeEntry(role: String, textEs: String, textEn: String?, timestamp: String) -> TranscriptEntry {
+    private func makeEntry(role: String, textOriginal: String, textEn: String?, timestamp: String) -> TranscriptEntry {
         let roleValue = TranscriptRole(rawValue: role) ?? .callee
-        let normalizedText = textEs.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+        let normalizedText = textOriginal.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
         let key = "\(role)|\(timestamp)|\(normalizedText)"
         let id = entryIDsByKey[key] ?? {
             let newID = UUID()
@@ -129,7 +129,7 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
         return TranscriptEntry(
             id: id,
             role: roleValue,
-            textEs: textEs,
+            textOriginal: textOriginal,
             textEn: textEn,
             timestamp: parseDate(timestamp)
         )

@@ -3,20 +3,20 @@ import Foundation
 struct TranscriptEntry: Equatable, Identifiable, Sendable {
     let id: UUID
     let role: TranscriptRole
-    let textEs: String
+    let textOriginal: String
     var textEn: String?
     let timestamp: Date
 
     init(
         id: UUID = UUID(),
         role: TranscriptRole,
-        textEs: String,
+        textOriginal: String,
         textEn: String? = nil,
         timestamp: Date = Date()
     ) {
         self.id = id
         self.role = role
-        self.textEs = textEs
+        self.textOriginal = textOriginal
         self.textEn = textEn
         self.timestamp = timestamp
     }
