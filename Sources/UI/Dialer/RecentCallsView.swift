@@ -25,85 +25,13 @@ struct RecentCallsView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(calls) { call in
-                        HStack(spacing: 12) {
-                            Image(systemName: callIcon(for: call.status))
-                                .font(.system(size: 14))
-                                .foregroundColor(callColor(for: call.status))
-                                .frame(width: 28)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Button {
-                                    onCallTapped(call.phoneNumber)
-                                } label: {
-                                    Text(call.phoneNumber)
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundColor(.appTextPrimary)
-                                }
-                                .buttonStyle(.plain)
-
-                                Text(call.startedAt.formatted(date: .abbreviated, time: .shortened))
-                                    .font(.system(size: 12))
-                                    .foregroundColor(.appTextSecondary)
-                            }
-
-                            Spacer()
-
-                            HStack(spacing: 10) {
-                                Text(call.duration.formattedDuration)
-                                    .font(.system(size: 13, design: .monospaced))
-                                    .foregroundColor(.appTextSecondary)
-
-                                if !call.verifiedFacts.isEmpty {
-                                    Text("\(call.verifiedFacts.count) facts")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundColor(.appAgentAccent)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.appAgentAccent.opacity(0.14))
-                                        )
-                                }
-
-                                if !call.conversation.isEmpty {
-                                    Text("\(call.conversation.count) turns")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundColor(.appTextSecondary)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(
-                                            Capsule()
-                                                .fill(Color.appSurface)
-                                        )
-                                }
-
-                                if let goal = call.goalResult {
-                                    Text(goal.success ? "goal done" : "goal \(Int((goal.completionRate * 100).rounded()))%")
-                                        .font(.system(size: 11, weight: .semibold))
-                                        .foregroundColor(goal.success ? .green : .orange)
-                                        .padding(.horizontal, 8)
-                                        .padding(.vertical, 4)
-                                        .background(
-                                            Capsule()
-                                                .fill((goal.success ? Color.green : Color.orange).opacity(0.14))
-                                        )
-                                }
-
-                                Button {
-                                    onSummaryTapped(call)
-                                } label: {
-                                    Image(systemName: "doc.text.magnifyingglass")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.appAccent)
-                                }
-                            }
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 12)
-                        .contentShape(Rectangle())
-                        .onTapGesture {
-                            onSummaryTapped(call)
-                        }
+                        RecentCallRow(
+                            call: call,
+                            callIcon: callIcon(for: call.status),
+                            callColor: callColor(for: call.status),
+                            onCallTapped: onCallTapped,
+                            onSummaryTapped: onSummaryTapped
+                        )
 
                         Divider()
                             .background(Color.appSurface)
@@ -129,5 +57,115 @@ struct RecentCallsView: View {
         case "missed": return .appDestructive
         default: return .appTextSecondary
         }
+    }
+}
+
+private struct RecentCallRow: View {
+    let call: CallRecord
+    let callIcon: String
+    let callColor: Color
+    let onCallTapped: (String) -> Void
+    let onSummaryTapped: (CallRecord) -> Void
+
+    private var hasMetaBadges: Bool {
+        !call.verifiedFacts.isEmpty || !call.conversation.isEmpty || call.goalResult != nil
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: callIcon)
+                .font(.system(size: 14))
+                .foregroundColor(callColor)
+                .frame(width: 28)
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Button {
+                        onCallTapped(call.phoneNumber)
+                    } label: {
+                        Text(call.phoneNumber)
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundColor(.appTextPrimary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                    }
+                    .buttonStyle(.plain)
+
+                    Spacer(minLength: 8)
+
+                    Text(call.duration.formattedDuration)
+                        .font(.system(size: 13, design: .monospaced))
+                        .foregroundColor(.appTextSecondary)
+                        .lineLimit(1)
+                        .fixedSize(horizontal: true, vertical: false)
+
+                    Image(systemName: "doc.text.magnifyingglass")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(.appAccent)
+                }
+
+                Text(call.startedAt.formatted(date: .abbreviated, time: .shortened))
+                    .font(.system(size: 12))
+                    .foregroundColor(.appTextSecondary)
+                    .lineLimit(1)
+
+                if hasMetaBadges {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 8) {
+                            if !call.verifiedFacts.isEmpty {
+                                CallMetaBadge(
+                                    text: "\(call.verifiedFacts.count) facts",
+                                    foreground: .appAgentAccent,
+                                    background: Color.appAgentAccent.opacity(0.14)
+                                )
+                            }
+
+                            if !call.conversation.isEmpty {
+                                CallMetaBadge(
+                                    text: "\(call.conversation.count) turns",
+                                    foreground: .appTextSecondary,
+                                    background: Color.appSurface
+                                )
+                            }
+
+                            if let goal = call.goalResult {
+                                CallMetaBadge(
+                                    text: goal.success ? "goal done" : "goal \(Int((goal.completionRate * 100).rounded()))%",
+                                    foreground: goal.success ? .green : .orange,
+                                    background: (goal.success ? Color.green : Color.orange).opacity(0.14)
+                                )
+                            }
+                        }
+                        .padding(.vertical, 1)
+                    }
+                }
+            }
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+        .onTapGesture {
+            onSummaryTapped(call)
+        }
+    }
+}
+
+private struct CallMetaBadge: View {
+    let text: String
+    let foreground: Color
+    let background: Color
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(foreground)
+            .lineLimit(1)
+            .fixedSize(horizontal: true, vertical: false)
+            .padding(.horizontal, 8)
+            .padding(.vertical, 4)
+            .background(
+                Capsule()
+                    .fill(background)
+            )
     }
 }
