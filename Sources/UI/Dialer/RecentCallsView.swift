@@ -33,9 +33,15 @@ struct RecentCallsView: View {
                                 .frame(width: 28)
 
                             VStack(alignment: .leading, spacing: 2) {
-                                Text(call.phoneNumber)
-                                    .font(.system(size: 16, weight: .medium))
-                                    .foregroundColor(.appTextPrimary)
+                                Button {
+                                    onCallTapped(call.phoneNumber)
+                                } label: {
+                                    Text(call.phoneNumber)
+                                        .font(.system(size: 16, weight: .medium))
+                                        .foregroundColor(.appTextPrimary)
+                                }
+                                .buttonStyle(.plain)
+
                                 Text(call.startedAt.formatted(date: .abbreviated, time: .shortened))
                                     .font(.system(size: 12))
                                     .foregroundColor(.appTextSecondary)
@@ -93,7 +99,7 @@ struct RecentCallsView: View {
                         .padding(.vertical, 12)
                         .contentShape(Rectangle())
                         .onTapGesture {
-                            onCallTapped(call.phoneNumber)
+                            onSummaryTapped(call)
                         }
 
                         Divider()
