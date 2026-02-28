@@ -70,7 +70,6 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
     let candidateValue: String
     let confidence: Double
     let promptEn: String
-    let promptEs: String
 
     var id: String {
         "\(factType)|\(reason)|\(sourceValue ?? "")|\(candidateValue)"
@@ -83,7 +82,6 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         case candidateValue = "candidate_value"
         case confidence
         case promptEn = "prompt_en"
-        case promptEs = "prompt_es"
     }
 
     init(
@@ -92,8 +90,7 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         sourceValue: String?,
         candidateValue: String,
         confidence: Double,
-        promptEn: String,
-        promptEs: String
+        promptEn: String
     ) {
         self.factType = factType
         self.reason = reason
@@ -101,7 +98,6 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         self.candidateValue = candidateValue
         self.confidence = confidence
         self.promptEn = promptEn
-        self.promptEs = promptEs
     }
 
     init(from decoder: Decoder) throws {
@@ -113,8 +109,6 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         confidence = try container.decodeIfPresent(Double.self, forKey: .confidence) ?? 0
         promptEn = try container.decodeIfPresent(String.self, forKey: .promptEn)
             ?? "Please confirm the critical detail."
-        promptEs = try container.decodeIfPresent(String.self, forKey: .promptEs)
-            ?? "Por favor confirma el dato importante."
     }
 }
 

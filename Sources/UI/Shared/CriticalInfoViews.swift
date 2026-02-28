@@ -21,10 +21,6 @@ struct CriticalConfirmationBanner: View {
             Text(confirmation.promptEn)
                 .font(.system(size: 13, weight: .medium))
                 .foregroundColor(.appTextPrimary)
-
-            Text(confirmation.promptEs)
-                .font(.system(size: 13))
-                .foregroundColor(.appTextSecondary)
         }
         .padding(12)
         .background(
