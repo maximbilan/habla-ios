@@ -8,6 +8,9 @@ struct CallSummaryView: View {
     private var facts: [VerifiedFact] {
         call?.verifiedFacts.isEmpty == false ? (call?.verifiedFacts ?? []) : state.verifiedFactsSummary
     }
+    private var conversation: [ConversationTurn] {
+        (call?.conversation ?? []).sorted { $0.timestamp < $1.timestamp }
+    }
 
     var body: some View {
         VStack(spacing: 0) {
@@ -67,6 +70,19 @@ struct CallSummaryView: View {
                             .foregroundColor(.appTextSecondary)
                             .padding(.top, 6)
                     }
+
+                    if !conversation.isEmpty {
+                        Text("Conversation")
+                            .font(.system(size: 20, weight: .bold))
+                            .foregroundColor(.appTextPrimary)
+                            .padding(.top, 6)
+
+                        LazyVStack(spacing: 10) {
+                            ForEach(conversation) { turn in
+                                ConversationTurnBubbleView(turn: turn)
+                            }
+                        }
+                    }
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.horizontal, 20)
@@ -74,5 +90,69 @@ struct CallSummaryView: View {
             }
         }
         .background(Color.appBackground)
+    }
+}
+
+private struct ConversationTurnBubbleView: View {
+    let turn: ConversationTurn
+
+    var body: some View {
+        HStack {
+            if turn.role.alignsRight { Spacer(minLength: 48) }
+
+            VStack(alignment: .leading, spacing: 6) {
+                Text(turn.role.title)
+                    .font(.caption)
+                    .foregroundColor(.appTextSecondary)
+
+                Text(turn.text)
+                    .font(.body)
+                    .foregroundColor(.appTextPrimary)
+
+                if let translated = displayedTranslation {
+                    Text(translated)
+                        .font(.body)
+                        .foregroundColor(.appTextSecondary)
+                        .italic()
+                }
+
+                Text(turn.timestamp.formatted(date: .omitted, time: .shortened))
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.appTextSecondary.opacity(0.8))
+            }
+            .padding(12)
+            .background(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .fill(bubbleColor)
+            )
+
+            if !turn.role.alignsRight { Spacer(minLength: 48) }
+        }
+    }
+
+    private var displayedTranslation: String? {
+        guard let translated = turn.translatedText?.trimmingCharacters(in: .whitespacesAndNewlines), !translated.isEmpty else {
+            return nil
+        }
+        if normalized(translated) == normalized(turn.text) {
+            return nil
+        }
+        return translated
+    }
+
+    private var bubbleColor: Color {
+        switch turn.role {
+        case .interpreter, .agent:
+            return Color.appAgentAccent.opacity(0.18)
+        case .caller, .callee:
+            return Color.gray.opacity(0.18)
+        }
+    }
+
+    private func normalized(_ text: String) -> String {
+        text
+            .trimmingCharacters(in: .whitespacesAndNewlines)
+            .replacingOccurrences(of: "  ", with: " ")
+            .lowercased()
     }
 }

@@ -38,6 +38,7 @@ struct AppState: Equatable {
     var agentPrompt: String = ""
     var agentUserName: String = UserDefaults.standard.string(forKey: "agentUserName") ?? ""
     var agentTranscript: [TranscriptEntry] = []
+    var liveCallConversation: [ConversationTurn] = []
     var agentStatus: AgentStatus = .idle
     var agentMidCallInput: String = ""
     var activeCriticalConfirmation: CriticalConfirmation? = nil

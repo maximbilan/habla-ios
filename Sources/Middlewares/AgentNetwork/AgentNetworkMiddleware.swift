@@ -52,6 +52,9 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
             let phoneNumber = state.phoneNumber
             let duration = state.callDuration
             let verifiedFacts = state.verifiedFactsSummary
+            let conversation = state.agentTranscript
+                .map { $0.asConversationTurn() }
+                .sorted { $0.timestamp < $1.timestamp }
 
             Task {
                 do {
@@ -64,7 +67,8 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                     phoneNumber: phoneNumber,
                     duration: duration,
                     status: "completed",
-                    verifiedFacts: verifiedFacts
+                    verifiedFacts: verifiedFacts,
+                    conversation: conversation
                 )
                 await MainActor.run {
                     dispatch(.saveCallRecord(record))
