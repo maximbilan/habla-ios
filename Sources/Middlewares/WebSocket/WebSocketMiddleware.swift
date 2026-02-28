@@ -8,15 +8,22 @@ import Foundation
 final class WebSocketMiddleware: Middleware, @unchecked Sendable {
     private let webSocketService: WebSocketService
     private let audioService: AudioService
+    private let conversationBuffer: CallConversationBuffer
 
-    init(webSocketService: WebSocketService = WebSocketService(), audioService: AudioService = AudioService()) {
+    init(
+        webSocketService: WebSocketService = WebSocketService(),
+        audioService: AudioService = AudioService(),
+        conversationBuffer: CallConversationBuffer = CallConversationBuffer()
+    ) {
         self.webSocketService = webSocketService
         self.audioService = audioService
+        self.conversationBuffer = conversationBuffer
     }
 
     func process(action: AppAction, state: AppState, dispatch: @escaping @MainActor (AppAction) -> Void) {
         switch action {
         case .connectWebSocket(let callSid):
+            conversationBuffer.reset()
             let serverURL = state.serverURL
             let ws = webSocketService
             let audio = audioService
@@ -84,17 +91,9 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
         case .verifiedFactsSummary(let facts):
             dispatch(.verifiedFactsSummaryReceived(facts))
         case .translation(let text):
-            dispatch(
-                .callConversationTurnReceived(
-                    ConversationTurn(role: .interpreter, text: text, timestamp: Date())
-                )
-            )
+            conversationBuffer.append(role: .interpreter, text: text)
         case .transcription(let text):
-            dispatch(
-                .callConversationTurnReceived(
-                    ConversationTurn(role: .caller, text: text, timestamp: Date())
-                )
-            )
+            conversationBuffer.append(role: .caller, text: text)
         case .error(let text):
             dispatch(.callFailed(.webSocketError(text)))
         case .status, .interrupted:
