@@ -40,6 +40,14 @@ struct DialerView: View {
                         }
                     }
 
+                    if !state.verifiedFactsSummary.isEmpty {
+                        VerifiedFactsSummaryCard(
+                            title: "Last Call Verified Facts",
+                            facts: state.verifiedFactsSummary,
+                            maxItems: 3
+                        )
+                    }
+
                     Menu {
                         ForEach(PhoneCountryCatalog.countries) { country in
                             Button(country.label) {

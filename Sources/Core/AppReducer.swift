@@ -39,6 +39,8 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callStatus = .initiating
         state.callError = nil
         state.callDuration = 0
+        state.activeCriticalConfirmation = nil
+        state.verifiedFactsSummary = []
         state.activeScreen = .activeCall
 
     case .callInitiated(let callSid):
@@ -58,7 +60,10 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .callEnded:
         state.callStatus = .idle
         state.callSid = nil
-        state.activeScreen = .dialer
+        state.activeCriticalConfirmation = nil
+        if state.activeScreen != .callSummary {
+            state.activeScreen = .dialer
+        }
         state.agentStatus = .idle
         state.agentTranscript = []
         state.agentMidCallInput = ""
@@ -73,6 +78,8 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callStatus = .initiating
         state.callError = nil
         state.callDuration = 0
+        state.activeCriticalConfirmation = nil
+        state.verifiedFactsSummary = []
         state.agentTranscript = []
         state.agentStatus = .idle
         state.activeScreen = .agentCall
@@ -106,6 +113,15 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .agentStatusUpdated(let status):
         state.agentStatus = status
 
+    case .criticalConfirmationReceived(let confirmation):
+        state.activeCriticalConfirmation = confirmation
+
+    case .verifiedFactsSummaryReceived(let facts):
+        state.verifiedFactsSummary = sortedVerifiedFacts(facts)
+
+    case .clearCriticalConfirmation:
+        state.activeCriticalConfirmation = nil
+
     case .agentMidCallInputChanged(let text):
         state.agentMidCallInput = text
 
@@ -119,7 +135,10 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callStatus = .idle
         state.callSid = nil
         state.agentStatus = .idle
-        state.activeScreen = .dialer
+        state.activeCriticalConfirmation = nil
+        if state.activeScreen != .callSummary {
+            state.activeScreen = .dialer
+        }
         state.agentTranscript = []
         state.agentMidCallInput = ""
 
@@ -140,6 +159,17 @@ func appReducer(state: inout AppState, action: AppAction) {
 
     case .navigateTo(let screen):
         state.activeScreen = screen
+
+    case .openCallSummary(let record):
+        state.selectedCallSummaryRecord = record
+        state.verifiedFactsSummary = sortedVerifiedFacts(record.verifiedFacts)
+        state.activeCriticalConfirmation = nil
+        state.activeScreen = .callSummary
+
+    case .closeCallSummary:
+        state.selectedCallSummaryRecord = nil
+        state.activeCriticalConfirmation = nil
+        state.activeScreen = .dialer
 
     case .callHistoryLoaded(let calls):
         state.recentCalls = calls
@@ -299,6 +329,14 @@ private func mergedTranscriptEntry(existing: TranscriptEntry, incoming: Transcri
         textEn: incoming.textEn ?? existing.textEn,
         timestamp: existing.timestamp
     )
+}
+
+private func sortedVerifiedFacts(_ facts: [VerifiedFact]) -> [VerifiedFact] {
+    facts.sorted {
+        if $0.verified != $1.verified { return $0.verified && !$1.verified }
+        if $0.confidence != $1.confidence { return $0.confidence > $1.confidence }
+        return $0.occurrences > $1.occurrences
+    }
 }
 
 private func resolveCountryCode(for rawPhoneNumber: String) -> String? {

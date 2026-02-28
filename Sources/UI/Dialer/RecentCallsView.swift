@@ -8,6 +8,7 @@ import SwiftUI
 struct RecentCallsView: View {
     let calls: [CallRecord]
     let onCallTapped: (String) -> Void
+    let onSummaryTapped: (CallRecord) -> Void
 
     var body: some View {
         if calls.isEmpty {
@@ -24,32 +25,54 @@ struct RecentCallsView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     ForEach(calls) { call in
-                        Button {
-                            onCallTapped(call.phoneNumber)
-                        } label: {
-                            HStack(spacing: 12) {
-                                Image(systemName: callIcon(for: call.status))
-                                    .font(.system(size: 14))
-                                    .foregroundColor(callColor(for: call.status))
-                                    .frame(width: 28)
+                        HStack(spacing: 12) {
+                            Image(systemName: callIcon(for: call.status))
+                                .font(.system(size: 14))
+                                .foregroundColor(callColor(for: call.status))
+                                .frame(width: 28)
 
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(call.phoneNumber)
-                                        .font(.system(size: 16, weight: .medium))
-                                        .foregroundColor(.appTextPrimary)
-                                    Text(call.startedAt.formatted(date: .abbreviated, time: .shortened))
-                                        .font(.system(size: 12))
-                                        .foregroundColor(.appTextSecondary)
-                                }
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(call.phoneNumber)
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.appTextPrimary)
+                                Text(call.startedAt.formatted(date: .abbreviated, time: .shortened))
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.appTextSecondary)
+                            }
 
-                                Spacer()
+                            Spacer()
 
+                            HStack(spacing: 10) {
                                 Text(call.duration.formattedDuration)
                                     .font(.system(size: 13, design: .monospaced))
                                     .foregroundColor(.appTextSecondary)
+
+                                if !call.verifiedFacts.isEmpty {
+                                    Text("\(call.verifiedFacts.count) facts")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(.appAgentAccent)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            Capsule()
+                                                .fill(Color.appAgentAccent.opacity(0.14))
+                                        )
+                                }
+
+                                Button {
+                                    onSummaryTapped(call)
+                                } label: {
+                                    Image(systemName: "doc.text.magnifyingglass")
+                                        .font(.system(size: 15, weight: .semibold))
+                                        .foregroundColor(.appAccent)
+                                }
                             }
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 12)
+                        }
+                        .padding(.horizontal, 16)
+                        .padding(.vertical, 12)
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            onCallTapped(call.phoneNumber)
                         }
 
                         Divider()

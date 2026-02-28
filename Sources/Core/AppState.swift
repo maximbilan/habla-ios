@@ -32,6 +32,7 @@ struct AppState: Equatable {
 
     // UI state
     var activeScreen: ActiveScreen = .dialer
+    var selectedCallSummaryRecord: CallRecord? = nil
 
     // Agent mode
     var agentPrompt: String = ""
@@ -39,6 +40,8 @@ struct AppState: Equatable {
     var agentTranscript: [TranscriptEntry] = []
     var agentStatus: AgentStatus = .idle
     var agentMidCallInput: String = ""
+    var activeCriticalConfirmation: CriticalConfirmation? = nil
+    var verifiedFactsSummary: [VerifiedFact] = []
 
     // Settings
     var selectedBackendService: BackendService = BackendService(
@@ -105,6 +108,7 @@ enum ActiveScreen: Equatable, Hashable, Sendable {
     case dialer
     case callHistory
     case activeCall
+    case callSummary
     case agentSetup
     case agentCall
     case settings

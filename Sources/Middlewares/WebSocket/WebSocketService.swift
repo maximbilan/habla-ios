@@ -41,7 +41,10 @@ actor WebSocketService {
         try await webSocketTask.send(.data(data))
     }
 
-    func receiveLoop(onAudio: @escaping @Sendable (Data) -> Void) async {
+    func receiveLoop(
+        onAudio: @escaping @Sendable (Data) -> Void,
+        onMessage: @escaping @Sendable (TranslationWSMessage) -> Void
+    ) async {
         guard let webSocketTask else { return }
 
         while !Task.isCancelled && isConnected {
@@ -50,8 +53,10 @@ actor WebSocketService {
                 switch message {
                 case .data(let data):
                     onAudio(data)
-                case .string:
-                    break
+                case .string(let text):
+                    if let parsed = TranslationWSMessage.decode(from: text) {
+                        onMessage(parsed)
+                    }
                 @unknown default:
                     break
                 }

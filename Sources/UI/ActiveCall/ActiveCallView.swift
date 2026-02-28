@@ -44,7 +44,25 @@ struct ActiveCallView: View {
             }
             .font(.system(size: 16, weight: .medium))
             .foregroundColor(.appTextSecondary)
-            .padding(.bottom, 40)
+            .padding(.bottom, 20)
+
+            if let confirmation = state.activeCriticalConfirmation {
+                CriticalConfirmationBanner(confirmation: confirmation) {
+                    store.dispatch(.clearCriticalConfirmation)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 14)
+            }
+
+            if !state.verifiedFactsSummary.isEmpty {
+                VerifiedFactsSummaryCard(
+                    title: "Verified Facts",
+                    facts: state.verifiedFactsSummary,
+                    maxItems: 3
+                )
+                .padding(.horizontal, 20)
+                .padding(.bottom, 14)
+            }
 
             // Audio visualizer
             AudioVisualizerView(

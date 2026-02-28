@@ -51,6 +51,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
             let serverURL = state.serverURL
             let phoneNumber = state.phoneNumber
             let duration = state.callDuration
+            let verifiedFacts = state.verifiedFactsSummary
 
             Task {
                 do {
@@ -62,10 +63,12 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                 let record = CallRecord(
                     phoneNumber: phoneNumber,
                     duration: duration,
-                    status: "completed"
+                    status: "completed",
+                    verifiedFacts: verifiedFacts
                 )
                 await MainActor.run {
                     dispatch(.saveCallRecord(record))
+                    dispatch(.openCallSummary(record))
                     dispatch(.agentCallEnded)
                     dispatch(.callEnded)
                 }
