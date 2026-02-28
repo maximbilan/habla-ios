@@ -14,6 +14,9 @@ struct CallSummaryView: View {
     private var facts: [VerifiedFact] {
         call?.verifiedFacts.isEmpty == false ? (call?.verifiedFacts ?? []) : state.verifiedFactsSummary
     }
+    private var goalResult: GoalResultSummary? {
+        call?.goalResult ?? state.agentGoalResult
+    }
     private var conversation: [ConversationTurn] {
         (call?.conversation ?? []).sorted { $0.timestamp < $1.timestamp }
     }
@@ -72,6 +75,10 @@ struct CallSummaryView: View {
                             RoundedRectangle(cornerRadius: 14, style: .continuous)
                                 .fill(Color.appSurface)
                         )
+                    }
+
+                    if let goalResult {
+                        GoalResultDetailSection(result: goalResult)
                     }
 
                     VerifiedFactsSummaryCard(
@@ -290,6 +297,75 @@ struct CallSummaryView: View {
         )
         store.dispatch(.saveCallerMemory(draft))
         memoryDraftEdited = false
+    }
+}
+
+private struct GoalResultDetailSection: View {
+    let result: GoalResultSummary
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Goal Result")
+                    .font(.system(size: 20, weight: .bold))
+                    .foregroundColor(.appTextPrimary)
+                Spacer()
+                Text(result.success ? "Completed" : "Partial")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(result.success ? .green : .orange)
+            }
+
+            if !result.objective.isEmpty {
+                Text(result.objective)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(.appTextPrimary)
+            }
+
+            if !result.fields.isEmpty {
+                ForEach(result.fields) { field in
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(field.displayName)
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.appTextSecondary)
+                            .frame(width: 92, alignment: .leading)
+                        Text(field.value)
+                            .font(.system(size: 13, weight: .medium))
+                            .foregroundColor(.appTextPrimary)
+                            .lineLimit(3)
+                    }
+                }
+            }
+
+            if !result.missingFields.isEmpty {
+                Text("Missing: \(missingFieldsText)")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+            }
+
+            if !result.summaryEn.isEmpty {
+                Text(result.summaryEn)
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.appTextPrimary)
+                    .padding(.top, 2)
+            }
+
+            if !result.summaryEs.isEmpty {
+                Text(result.summaryEs)
+                    .font(.system(size: 12))
+                    .foregroundColor(.appTextSecondary)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.appSurface)
+        )
+    }
+
+    private var missingFieldsText: String {
+        result.missingFields
+            .map { $0.replacingOccurrences(of: "_", with: " ") }
+            .joined(separator: ", ")
     }
 }
 

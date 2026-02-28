@@ -25,6 +25,12 @@ struct AgentCallRequest: Codable, Sendable {
     let user_name: String
     let language: String
     let voice_gender: VoiceGender
+    let goal_schema: AgentGoalSchema?
+}
+
+struct AgentGoalSchema: Codable, Sendable {
+    let objective: String
+    let required_fields: [String]
 }
 
 struct AgentCallResponse: Codable, Sendable {

@@ -7,6 +7,8 @@ enum AgentWSMessage: Sendable {
     case transcriptUpdate(role: String, textEs: String, textEn: String, timestamp: String)
     case criticalConfirmation(CriticalConfirmation)
     case verifiedFactsSummary([VerifiedFact])
+    case goalProgress(GoalProgressPayload)
+    case goalResultSummary(GoalResultSummary)
 }
 
 private struct AgentWSRawMessage: Decodable, Sendable {
@@ -51,6 +53,16 @@ extension AgentWSMessage {
             return .criticalConfirmation(confirmation)
         case "verified_facts_summary":
             return .verifiedFactsSummary(raw.facts ?? [])
+        case "goal_progress":
+            guard let progress = try? JSONDecoder().decode(GoalProgressPayload.self, from: data) else {
+                return nil
+            }
+            return .goalProgress(progress)
+        case "goal_result_summary":
+            guard let summary = try? JSONDecoder().decode(GoalResultSummary.self, from: data) else {
+                return nil
+            }
+            return .goalResultSummary(summary)
         default:
             return nil
         }

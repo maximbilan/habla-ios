@@ -31,7 +31,10 @@ final class CallRecordModel {
         self.verifiedFactsData = verifiedFactsData
     }
 
-    func toCallRecord(conversation: [ConversationTurn] = []) -> CallRecord {
+    func toCallRecord(
+        conversation: [ConversationTurn] = [],
+        goalResult: GoalResultSummary? = nil
+    ) -> CallRecord {
         CallRecord(
             id: id,
             phoneNumber: phoneNumber,
@@ -39,7 +42,8 @@ final class CallRecordModel {
             duration: duration,
             status: status,
             verifiedFacts: decodeVerifiedFacts(verifiedFactsData),
-            conversation: conversation
+            conversation: conversation,
+            goalResult: goalResult
         )
     }
 

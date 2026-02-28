@@ -41,6 +41,8 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callDuration = 0
         state.activeCriticalConfirmation = nil
         state.verifiedFactsSummary = []
+        state.agentGoalProgress = nil
+        state.agentGoalResult = nil
         state.liveCallConversation = []
         state.activeScreen = .activeCall
 
@@ -69,12 +71,20 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.agentTranscript = []
         state.liveCallConversation = []
         state.agentMidCallInput = ""
+        state.agentGoalProgress = nil
+        state.agentGoalResult = nil
 
     case .agentPromptChanged(let text):
         state.agentPrompt = text
 
     case .agentUserNameChanged(let name):
         state.agentUserName = name
+
+    case .agentGoalObjectiveChanged(let objective):
+        state.agentGoalObjective = objective
+
+    case .agentGoalRequiredFieldsChanged(let fieldsText):
+        state.agentGoalRequiredFieldsText = fieldsText
 
     case .initiateAgentCall:
         state.callStatus = .initiating
@@ -85,6 +95,8 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.agentTranscript = []
         state.liveCallConversation = []
         state.agentStatus = .idle
+        state.agentGoalProgress = nil
+        state.agentGoalResult = nil
         state.activeScreen = .agentCall
 
     case .agentCallInitiated(let callSid):
@@ -135,6 +147,12 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .verifiedFactsSummaryReceived(let facts):
         state.verifiedFactsSummary = sortedVerifiedFacts(facts)
 
+    case .goalProgressReceived(let progress):
+        state.agentGoalProgress = progress
+
+    case .goalResultReceived(let result):
+        state.agentGoalResult = result
+
     case .clearCriticalConfirmation:
         state.activeCriticalConfirmation = nil
 
@@ -158,6 +176,8 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.agentTranscript = []
         state.liveCallConversation = []
         state.agentMidCallInput = ""
+        state.agentGoalProgress = nil
+        state.agentGoalResult = nil
 
     case .toggleMute:
         state.isMuted.toggle()
@@ -186,12 +206,14 @@ func appReducer(state: inout AppState, action: AppAction) {
         }
         state.selectedCallSummaryRecord = record
         state.verifiedFactsSummary = sortedVerifiedFacts(record.verifiedFacts)
+        state.agentGoalResult = record.goalResult
         state.activeCriticalConfirmation = nil
         state.activeScreen = .callSummary
 
     case .closeCallSummary:
         state.selectedCallSummaryRecord = nil
         state.activeCriticalConfirmation = nil
+        state.agentGoalResult = nil
         state.activeScreen = state.callSummaryReturnScreen
         state.callSummaryReturnScreen = .dialer
 

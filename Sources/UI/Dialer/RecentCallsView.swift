@@ -77,6 +77,18 @@ struct RecentCallsView: View {
                                         )
                                 }
 
+                                if let goal = call.goalResult {
+                                    Text(goal.success ? "goal done" : "goal \(Int((goal.completionRate * 100).rounded()))%")
+                                        .font(.system(size: 11, weight: .semibold))
+                                        .foregroundColor(goal.success ? .green : .orange)
+                                        .padding(.horizontal, 8)
+                                        .padding(.vertical, 4)
+                                        .background(
+                                            Capsule()
+                                                .fill((goal.success ? Color.green : Color.orange).opacity(0.14))
+                                        )
+                                }
+
                                 Button {
                                     onSummaryTapped(call)
                                 } label: {
