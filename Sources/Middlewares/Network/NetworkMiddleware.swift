@@ -7,14 +7,20 @@ import Foundation
 
 final class NetworkMiddleware: Middleware, @unchecked Sendable {
     private let networkService: NetworkService
+    private let conversationBuffer: CallConversationBuffer
 
-    init(networkService: NetworkService = NetworkService()) {
+    init(
+        networkService: NetworkService = NetworkService(),
+        conversationBuffer: CallConversationBuffer = CallConversationBuffer()
+    ) {
         self.networkService = networkService
+        self.conversationBuffer = conversationBuffer
     }
 
     func process(action: AppAction, state: AppState, dispatch: @escaping @MainActor (AppAction) -> Void) {
         switch action {
         case .initiateCall(let phoneNumber):
+            conversationBuffer.reset()
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
             let sourceLanguage = state.translationSourceLanguage
@@ -54,7 +60,7 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
             let phoneNumber = state.phoneNumber
             let duration = state.callDuration
             let verifiedFacts = state.verifiedFactsSummary
-            let conversation = normalizedConversation(state.liveCallConversation)
+            let conversation = conversationBuffer.snapshot()
 
             Task {
                 do {
@@ -70,12 +76,16 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
                     verifiedFacts: verifiedFacts,
                     conversation: conversation
                 )
+                conversationBuffer.reset()
                 await MainActor.run {
                     dispatch(.saveCallRecord(record))
                     dispatch(.openCallSummary(record))
                     dispatch(.callEnded)
                 }
             }
+
+        case .callFailed:
+            conversationBuffer.reset()
 
         default:
             break
@@ -105,11 +115,5 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
             return nil
         }
         return memory
-    }
-
-    private func normalizedConversation(_ conversation: [ConversationTurn]) -> [ConversationTurn] {
-        conversation
-            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
-            .sorted { $0.timestamp < $1.timestamp }
     }
 }
