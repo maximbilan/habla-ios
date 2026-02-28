@@ -74,6 +74,9 @@ enum AppAction: Sendable {
     case loadCallHistory
     case callHistoryLoaded([CallRecord])
     case saveCallRecord(CallRecord)
+    case loadCallerMemory(String)
+    case callerMemoryLoaded(phoneKey: String, memory: CallerMemory?)
+    case saveCallerMemory(CallerMemoryDraft)
 
     // Caller ID actions
     case callerIdPhoneNumberChanged(String)

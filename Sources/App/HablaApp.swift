@@ -31,6 +31,7 @@ struct HablaApp: App {
             AudioMiddleware(audioService: audioService, webSocketService: webSocketService),
             CallTimerMiddleware(),
             CallHistoryMiddleware(modelContainer: container),
+            CallerMemoryMiddleware(),
             AgentNetworkMiddleware(),
             AgentWebSocketMiddleware(webSocketService: agentWebSocketService),
             CallerIdMiddleware(),

@@ -12,7 +12,13 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
         case .initiateAgentCall(let phoneNumber, let prompt, let userName):
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
-            let calleeLanguage = state.translationTargetLanguage
+            let calleeLanguage = resolveCalleeLanguage(for: phoneNumber, state: state)
+            let personalizedPrompt = applyCallerMemory(
+                to: prompt,
+                phoneNumber: phoneNumber,
+                calleeLanguage: calleeLanguage,
+                state: state
+            )
             let voiceGender = state.selectedVoiceGender
 
             Task {
@@ -20,7 +26,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                     let response = try await networkService.initiateAgentCall(
                         to: phoneNumber,
                         from: fromNumber,
-                        prompt: prompt,
+                        prompt: personalizedPrompt,
                         userName: userName,
                         language: calleeLanguage,
                         voiceGender: voiceGender,
@@ -86,5 +92,55 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
     private func resolveCallerId(state: AppState) -> String? {
         guard let selectedSid = state.callerId.selectedNumberSid else { return nil }
         return state.callerId.verifiedNumbers.first { $0.id == selectedSid }?.phoneNumber
+    }
+
+    private func resolveCalleeLanguage(for phoneNumber: String, state: AppState) -> String {
+        guard let memory = matchedCallerMemory(for: phoneNumber, state: state),
+              let preferred = memory.preferredTargetLanguage,
+              let language = TranslationLanguageCatalog.language(code: preferred) else {
+            return state.translationTargetLanguage
+        }
+        return language.code
+    }
+
+    private func applyCallerMemory(
+        to prompt: String,
+        phoneNumber: String,
+        calleeLanguage: String,
+        state: AppState
+    ) -> String {
+        guard let memory = matchedCallerMemory(for: phoneNumber, state: state) else {
+            return prompt
+        }
+
+        var contextLines: [String] = []
+        contextLines.append("Preferred tone: \(memory.preferredTone.agentInstruction).")
+
+        if let language = TranslationLanguageCatalog.language(code: calleeLanguage) {
+            contextLines.append("Preferred language for this caller: \(language.label).")
+        }
+
+        if !memory.priorIssues.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            contextLines.append("Prior issues to remember: \(memory.priorIssues).")
+        }
+
+        let contextBlock = contextLines.map { "- \($0)" }.joined(separator: "\n")
+        return """
+        \(prompt)
+
+        Caller memory (consented, local):
+        \(contextBlock)
+        """
+    }
+
+    private func matchedCallerMemory(for phoneNumber: String, state: AppState) -> CallerMemory? {
+        guard let phoneKey = CallerMemoryKey.normalize(phoneNumber: phoneNumber),
+              let activePhoneKey = state.activeCallerMemoryPhoneKey,
+              phoneKey == activePhoneKey,
+              let memory = state.activeCallerMemory,
+              memory.consentGranted else {
+            return nil
+        }
+        return memory
     }
 }

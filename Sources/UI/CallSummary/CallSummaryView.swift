@@ -2,6 +2,12 @@ import SwiftUI
 
 struct CallSummaryView: View {
     @EnvironmentObject var store: Store
+    @State private var memoryConsent: Bool = false
+    @State private var memoryLanguageCode: String = TranslationLanguageCatalog.defaultTarget.code
+    @State private var memoryTone: CallerTone = .neutral
+    @State private var memoryPriorIssues: String = ""
+    @State private var memoryDraftPhoneKey: String = ""
+    @State private var memoryDraftEdited: Bool = false
 
     private var state: AppState { store.state }
     private var call: CallRecord? { state.selectedCallSummaryRecord }
@@ -10,6 +16,17 @@ struct CallSummaryView: View {
     }
     private var conversation: [ConversationTurn] {
         (call?.conversation ?? []).sorted { $0.timestamp < $1.timestamp }
+    }
+    private var currentCallPhoneKey: String? {
+        guard let phone = call?.phoneNumber else { return nil }
+        return CallerMemoryKey.normalize(phoneNumber: phone)
+    }
+    private var storedMemoryForCurrentCall: CallerMemory? {
+        guard let phoneKey = currentCallPhoneKey,
+              phoneKey == state.activeCallerMemoryPhoneKey else {
+            return nil
+        }
+        return state.activeCallerMemory
     }
 
     var body: some View {
@@ -71,6 +88,8 @@ struct CallSummaryView: View {
                             .padding(.top, 6)
                     }
 
+                    callerMemorySection
+
                     if !conversation.isEmpty {
                         Text("Conversation")
                             .font(.system(size: 20, weight: .bold))
@@ -90,6 +109,187 @@ struct CallSummaryView: View {
             }
         }
         .background(Color.appBackground)
+        .onAppear {
+            if let number = call?.phoneNumber {
+                store.dispatch(.loadCallerMemory(number))
+            }
+            refreshMemoryDraft(force: true)
+        }
+        .onChange(of: call?.id) { _, _ in
+            memoryDraftEdited = false
+            if let number = call?.phoneNumber {
+                store.dispatch(.loadCallerMemory(number))
+            }
+            refreshMemoryDraft(force: true)
+        }
+        .onChange(of: state.activeCallerMemory?.updatedAt) { _, _ in
+            refreshMemoryDraft(force: false)
+        }
+    }
+
+    @ViewBuilder
+    private var callerMemorySection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Caller Memory")
+                .font(.system(size: 20, weight: .bold))
+                .foregroundColor(.appTextPrimary)
+
+            Toggle(isOn: Binding(
+                get: { memoryConsent },
+                set: { newValue in
+                    memoryConsent = newValue
+                    memoryDraftEdited = true
+                }
+            )) {
+                Text("Consent to remember this caller")
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(.appTextPrimary)
+            }
+            .tint(.appAccent)
+
+            if memoryConsent {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Preferred language")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.appTextSecondary)
+                        .textCase(.uppercase)
+
+                    Menu {
+                        ForEach(TranslationLanguageCatalog.languages) { language in
+                            Button(language.labelWithEmoji) {
+                                memoryLanguageCode = language.code
+                                memoryDraftEdited = true
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(TranslationLanguageCatalog.languageLabelWithEmoji(for: memoryLanguageCode))
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.appTextPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.appTextSecondary)
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.appBackground)
+                        )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Preferred tone")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.appTextSecondary)
+                        .textCase(.uppercase)
+
+                    Menu {
+                        ForEach(CallerTone.allCases) { tone in
+                            Button(tone.title) {
+                                memoryTone = tone
+                                memoryDraftEdited = true
+                            }
+                        }
+                    } label: {
+                        HStack(spacing: 8) {
+                            Text(memoryTone.title)
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundColor(.appTextPrimary)
+                            Spacer()
+                            Image(systemName: "chevron.down")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundColor(.appTextSecondary)
+                        }
+                        .padding(12)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.appBackground)
+                        )
+                    }
+                }
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Prior issues to remember")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(.appTextSecondary)
+                        .textCase(.uppercase)
+
+                    TextEditor(text: Binding(
+                        get: { memoryPriorIssues },
+                        set: { newValue in
+                            memoryPriorIssues = newValue
+                            memoryDraftEdited = true
+                        }
+                    ))
+                    .font(.system(size: 15))
+                    .foregroundColor(.appTextPrimary)
+                    .scrollContentBackground(.hidden)
+                    .frame(minHeight: 88)
+                    .padding(8)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(Color.appBackground)
+                    )
+                }
+            }
+
+            Button {
+                saveCallerMemory()
+            } label: {
+                Text(memoryConsent ? "Save Caller Memory" : "Disable Caller Memory")
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10, style: .continuous)
+                            .fill(memoryConsent ? Color.appAccent : Color.appTextSecondary)
+                    )
+            }
+
+            if let memory = storedMemoryForCurrentCall, memory.consentGranted {
+                Text("Saved for \(memory.callCount) call(s). Last seen \(memory.lastCallAt?.formatted(date: .abbreviated, time: .omitted) ?? "today").")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+            }
+        }
+        .padding(14)
+        .background(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .fill(Color.appSurface)
+        )
+    }
+
+    private func refreshMemoryDraft(force: Bool) {
+        guard let phoneKey = currentCallPhoneKey else { return }
+
+        if !force && memoryDraftEdited && memoryDraftPhoneKey == phoneKey {
+            return
+        }
+
+        let memory = storedMemoryForCurrentCall
+        let fallbackLanguage = state.translationTargetLanguage
+
+        memoryConsent = memory?.consentGranted ?? false
+        memoryLanguageCode = memory?.preferredTargetLanguage ?? fallbackLanguage
+        memoryTone = memory?.preferredTone ?? .neutral
+        memoryPriorIssues = memory?.priorIssues ?? ""
+        memoryDraftPhoneKey = phoneKey
+    }
+
+    private func saveCallerMemory() {
+        guard let phoneNumber = call?.phoneNumber else { return }
+        let draft = CallerMemoryDraft(
+            phoneNumber: phoneNumber,
+            consentGranted: memoryConsent,
+            preferredTargetLanguage: memoryConsent ? memoryLanguageCode : nil,
+            preferredTone: memoryTone,
+            priorIssues: memoryConsent ? memoryPriorIssues : ""
+        )
+        store.dispatch(.saveCallerMemory(draft))
+        memoryDraftEdited = false
     }
 }
 

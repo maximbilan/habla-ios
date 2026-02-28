@@ -18,7 +18,7 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
             let sourceLanguage = state.translationSourceLanguage
-            let targetLanguage = state.translationTargetLanguage
+            let targetLanguage = resolveTargetLanguage(for: phoneNumber, state: state)
             let voiceGender = state.selectedVoiceGender
             Task {
                 do {
@@ -85,6 +85,26 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
     private func resolveCallerId(state: AppState) -> String? {
         guard let selectedSid = state.callerId.selectedNumberSid else { return nil }
         return state.callerId.verifiedNumbers.first { $0.id == selectedSid }?.phoneNumber
+    }
+
+    private func resolveTargetLanguage(for phoneNumber: String, state: AppState) -> String {
+        guard let memory = matchedCallerMemory(for: phoneNumber, state: state),
+              let preferred = memory.preferredTargetLanguage,
+              let language = TranslationLanguageCatalog.language(code: preferred) else {
+            return state.translationTargetLanguage
+        }
+        return language.code
+    }
+
+    private func matchedCallerMemory(for phoneNumber: String, state: AppState) -> CallerMemory? {
+        guard let phoneKey = CallerMemoryKey.normalize(phoneNumber: phoneNumber),
+              let activePhoneKey = state.activeCallerMemoryPhoneKey,
+              phoneKey == activePhoneKey,
+              let memory = state.activeCallerMemory,
+              memory.consentGranted else {
+            return nil
+        }
+        return memory
     }
 
     private func normalizedConversation(_ conversation: [ConversationTurn]) -> [ConversationTurn] {

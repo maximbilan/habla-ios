@@ -18,6 +18,16 @@ struct DialerView: View {
     private var canBackspace: Bool {
         state.phoneNumber.count > selectedCountry.dialCode.count
     }
+    private var matchedCallerMemory: CallerMemory? {
+        guard let phoneKey = CallerMemoryKey.normalize(phoneNumber: state.phoneNumber),
+              let activePhoneKey = state.activeCallerMemoryPhoneKey,
+              phoneKey == activePhoneKey,
+              let memory = state.activeCallerMemory,
+              memory.consentGranted else {
+            return nil
+        }
+        return memory
+    }
 
     var body: some View {
         GeometryReader { proxy in
@@ -46,6 +56,10 @@ struct DialerView: View {
                             facts: state.verifiedFactsSummary,
                             maxItems: 3
                         )
+                    }
+
+                    if let memory = matchedCallerMemory {
+                        CallerMemoryPreviewCard(memory: memory)
                     }
 
                     Menu {
@@ -173,6 +187,41 @@ struct DialerView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.appBackground)
+    }
+}
+
+private struct CallerMemoryPreviewCard: View {
+    let memory: CallerMemory
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Caller Memory")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(.appTextPrimary)
+
+            if let language = memory.preferredTargetLanguage {
+                Text("Language: \(TranslationLanguageCatalog.languageLabelWithEmoji(for: language))")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundColor(.appTextSecondary)
+            }
+
+            Text("Tone: \(memory.preferredTone.title)")
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(.appTextSecondary)
+
+            if !memory.priorIssues.isEmpty {
+                Text("Prior issues: \(memory.priorIssues)")
+                    .font(.system(size: 12))
+                    .foregroundColor(.appTextSecondary)
+                    .lineLimit(2)
+            }
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                .fill(Color.appSurface)
+        )
     }
 }
 
