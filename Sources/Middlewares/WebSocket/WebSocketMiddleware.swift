@@ -28,7 +28,7 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
                         dispatch(.callStatusUpdated(.connected))
                     }
 
-                    await ws.receiveLoop { data in
+                    await ws.receiveLoop(onAudio: { data in
                         Task {
                             await audio.playAudio(data)
                             await MainActor.run {
@@ -39,7 +39,13 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
                                 dispatch(.receivingAudioChanged(false))
                             }
                         }
+                    }, onMessage: { [weak self] message in
+                        guard let self else { return }
+                        Task { @MainActor in
+                            self.handleMessage(message, dispatch: dispatch)
+                        }
                     }
+                    )
 
                     await MainActor.run {
                         dispatch(.callEnded)
@@ -63,6 +69,23 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
             }
 
         default:
+            break
+        }
+    }
+
+    @MainActor
+    private func handleMessage(
+        _ message: TranslationWSMessage,
+        dispatch: @escaping @MainActor (AppAction) -> Void
+    ) {
+        switch message {
+        case .criticalConfirmation(let confirmation):
+            dispatch(.criticalConfirmationReceived(confirmation))
+        case .verifiedFactsSummary(let facts):
+            dispatch(.verifiedFactsSummaryReceived(facts))
+        case .error(let text):
+            dispatch(.callFailed(.webSocketError(text)))
+        case .status, .translation, .transcription, .interrupted:
             break
         }
     }

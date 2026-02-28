@@ -44,7 +44,8 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                         phoneNumber: record.phoneNumber,
                         startedAt: record.startedAt,
                         duration: record.duration,
-                        status: record.status
+                        status: record.status,
+                        verifiedFactsData: CallRecordModel.encodeVerifiedFacts(record.verifiedFacts)
                     )
                     context.insert(model)
                     try context.save()

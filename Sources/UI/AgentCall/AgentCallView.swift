@@ -26,6 +26,24 @@ struct AgentCallView: View {
                 .padding(.bottom, 12)
                 .frame(maxWidth: .infinity, alignment: .leading)
 
+            if let confirmation = state.activeCriticalConfirmation {
+                CriticalConfirmationBanner(confirmation: confirmation) {
+                    store.dispatch(.clearCriticalConfirmation)
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
+
+            if !state.verifiedFactsSummary.isEmpty {
+                VerifiedFactsSummaryCard(
+                    title: "Verified Facts",
+                    facts: state.verifiedFactsSummary,
+                    maxItems: 4
+                )
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
+
             Divider()
                 .background(Color.appSurface)
 

@@ -102,6 +102,12 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
         case .transcriptUpdate(let role, let textEs, let textEn, let timestamp):
             let entry = makeEntry(role: role, textEs: textEs, textEn: textEn, timestamp: timestamp)
             dispatch(.agentTranscriptUpdated(entry))
+
+        case .criticalConfirmation(let confirmation):
+            dispatch(.criticalConfirmationReceived(confirmation))
+
+        case .verifiedFactsSummary(let facts):
+            dispatch(.verifiedFactsSummaryReceived(facts))
         }
     }
 
