@@ -35,13 +35,11 @@ struct CallSummaryView: View {
                 Button {
                     store.dispatch(.closeCallSummary)
                 } label: {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chevron.left")
-                        Text("Done")
-                    }
+                    Image(systemName: "chevron.left")
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.appAccent)
                 }
+                .accessibilityLabel("Back")
 
                 Spacer()
             }
@@ -138,7 +136,7 @@ struct CallSummaryView: View {
                 get: { memoryConsent },
                 set: { newValue in
                     memoryConsent = newValue
-                    memoryDraftEdited = true
+                    persistCallerMemoryChanges()
                 }
             )) {
                 Text("Consent to remember this caller")
@@ -158,7 +156,7 @@ struct CallSummaryView: View {
                         ForEach(TranslationLanguageCatalog.languages) { language in
                             Button(language.labelWithEmoji) {
                                 memoryLanguageCode = language.code
-                                memoryDraftEdited = true
+                                persistCallerMemoryChanges()
                             }
                         }
                     } label: {
@@ -189,7 +187,7 @@ struct CallSummaryView: View {
                         ForEach(CallerTone.allCases) { tone in
                             Button(tone.title) {
                                 memoryTone = tone
-                                memoryDraftEdited = true
+                                persistCallerMemoryChanges()
                             }
                         }
                     } label: {
@@ -220,7 +218,7 @@ struct CallSummaryView: View {
                         get: { memoryPriorIssues },
                         set: { newValue in
                             memoryPriorIssues = newValue
-                            memoryDraftEdited = true
+                            persistCallerMemoryChanges()
                         }
                     ))
                     .font(.system(size: 15))
@@ -233,20 +231,6 @@ struct CallSummaryView: View {
                             .fill(Color.appBackground)
                     )
                 }
-            }
-
-            Button {
-                saveCallerMemory()
-            } label: {
-                Text(memoryConsent ? "Save Caller Memory" : "Disable Caller Memory")
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(.white)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(
-                        RoundedRectangle(cornerRadius: 10, style: .continuous)
-                            .fill(memoryConsent ? Color.appAccent : Color.appTextSecondary)
-                    )
             }
 
             if let memory = storedMemoryForCurrentCall, memory.consentGranted {
@@ -290,6 +274,11 @@ struct CallSummaryView: View {
         )
         store.dispatch(.saveCallerMemory(draft))
         memoryDraftEdited = false
+    }
+
+    private func persistCallerMemoryChanges() {
+        memoryDraftEdited = true
+        saveCallerMemory()
     }
 }
 
