@@ -66,6 +66,10 @@ struct AppState: Equatable {
 
     // Call history
     var recentCalls: [CallRecord] = []
+
+    // Caller memory
+    var activeCallerMemoryPhoneKey: String? = nil
+    var activeCallerMemory: CallerMemory? = nil
 }
 
 struct CallerIdState: Equatable, Sendable {

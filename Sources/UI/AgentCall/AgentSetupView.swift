@@ -6,6 +6,16 @@ struct AgentSetupView: View {
     @State private var userName: String = ""
 
     private var state: AppState { store.state }
+    private var matchedCallerMemory: CallerMemory? {
+        guard let phoneKey = CallerMemoryKey.normalize(phoneNumber: state.phoneNumber),
+              let activePhoneKey = state.activeCallerMemoryPhoneKey,
+              phoneKey == activePhoneKey,
+              let memory = state.activeCallerMemory,
+              memory.consentGranted else {
+            return nil
+        }
+        return memory
+    }
 
     private let suggestions: [AgentPromptSuggestion] = [
         .init(
@@ -57,6 +67,33 @@ struct AgentSetupView: View {
                     Text("Calling: \(state.phoneNumber)")
                         .font(.system(size: 15, weight: .medium, design: .monospaced))
                         .foregroundColor(.appTextSecondary)
+
+                    if let memory = matchedCallerMemory {
+                        VStack(alignment: .leading, spacing: 6) {
+                            Text("Caller memory will be applied")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(.appTextPrimary)
+                            if let language = memory.preferredTargetLanguage {
+                                Text("Language: \(TranslationLanguageCatalog.languageLabelWithEmoji(for: language))")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.appTextSecondary)
+                            }
+                            Text("Tone: \(memory.preferredTone.title)")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(.appTextSecondary)
+                            if !memory.priorIssues.isEmpty {
+                                Text("Prior issues: \(memory.priorIssues)")
+                                    .font(.system(size: 12))
+                                    .foregroundColor(.appTextSecondary)
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(10)
+                        .background(
+                            RoundedRectangle(cornerRadius: 10, style: .continuous)
+                                .fill(Color.appSurface)
+                        )
+                    }
 
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Your name")
