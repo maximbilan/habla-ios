@@ -23,6 +23,9 @@ struct CallHistoryView: View {
                     store.dispatch(.phoneNumberChanged(number))
                     store.dispatch(.navigateTo(.dialer))
                 },
+                onConversationTapped: { record in
+                    store.dispatch(.openCallConversation(record))
+                },
                 onSummaryTapped: { record in
                     store.dispatch(.openCallSummary(record))
                 }

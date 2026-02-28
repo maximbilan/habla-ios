@@ -54,6 +54,7 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
             let phoneNumber = state.phoneNumber
             let duration = state.callDuration
             let verifiedFacts = state.verifiedFactsSummary
+            let conversation = normalizedConversation(state.liveCallConversation)
 
             Task {
                 do {
@@ -66,7 +67,8 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
                     phoneNumber: phoneNumber,
                     duration: duration,
                     status: "completed",
-                    verifiedFacts: verifiedFacts
+                    verifiedFacts: verifiedFacts,
+                    conversation: conversation
                 )
                 await MainActor.run {
                     dispatch(.saveCallRecord(record))
@@ -83,5 +85,11 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
     private func resolveCallerId(state: AppState) -> String? {
         guard let selectedSid = state.callerId.selectedNumberSid else { return nil }
         return state.callerId.verifiedNumbers.first { $0.id == selectedSid }?.phoneNumber
+    }
+
+    private func normalizedConversation(_ conversation: [ConversationTurn]) -> [ConversationTurn] {
+        conversation
+            .filter { !$0.text.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
+            .sorted { $0.timestamp < $1.timestamp }
     }
 }

@@ -24,6 +24,19 @@ struct CallSummaryView: View {
                 }
 
                 Spacer()
+
+                if let call, !call.conversation.isEmpty {
+                    Button {
+                        store.dispatch(.openCallConversation(call))
+                    } label: {
+                        HStack(spacing: 6) {
+                            Image(systemName: "text.bubble")
+                            Text("Conversation")
+                        }
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(.appAccent)
+                    }
+                }
             }
             .padding(.horizontal, 20)
             .padding(.top, 12)

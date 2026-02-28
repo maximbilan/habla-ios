@@ -83,9 +83,21 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
             dispatch(.criticalConfirmationReceived(confirmation))
         case .verifiedFactsSummary(let facts):
             dispatch(.verifiedFactsSummaryReceived(facts))
+        case .translation(let text):
+            dispatch(
+                .callConversationTurnReceived(
+                    ConversationTurn(role: .interpreter, text: text, timestamp: Date())
+                )
+            )
+        case .transcription(let text):
+            dispatch(
+                .callConversationTurnReceived(
+                    ConversationTurn(role: .caller, text: text, timestamp: Date())
+                )
+            )
         case .error(let text):
             dispatch(.callFailed(.webSocketError(text)))
-        case .status, .translation, .transcription, .interrupted:
+        case .status, .interrupted:
             break
         }
     }

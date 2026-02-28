@@ -30,6 +30,7 @@ enum AppAction: Sendable {
     // Agent transcript
     case agentTranscriptReceived(TranscriptEntry)
     case agentTranscriptUpdated(TranscriptEntry)
+    case callConversationTurnReceived(ConversationTurn)
     case agentStatusUpdated(AgentStatus)
     case criticalConfirmationReceived(CriticalConfirmation)
     case verifiedFactsSummaryReceived([VerifiedFact])
@@ -68,6 +69,8 @@ enum AppAction: Sendable {
     case navigateTo(ActiveScreen)
     case openCallSummary(CallRecord)
     case closeCallSummary
+    case openCallConversation(CallRecord)
+    case closeCallConversation
 
     // Call history
     case loadCallHistory
