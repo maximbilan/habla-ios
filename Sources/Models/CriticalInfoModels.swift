@@ -253,7 +253,6 @@ struct GoalResultSummary: Codable, Equatable, Sendable {
     let completionRate: Double
     let success: Bool
     let summaryEn: String
-    let summaryEs: String
     let result: GoalStructuredResult?
 
     enum CodingKeys: String, CodingKey {
@@ -264,7 +263,6 @@ struct GoalResultSummary: Codable, Equatable, Sendable {
         case completionRate = "completion_rate"
         case success
         case summaryEn = "summary_en"
-        case summaryEs = "summary_es"
         case result
     }
 
@@ -276,7 +274,6 @@ struct GoalResultSummary: Codable, Equatable, Sendable {
         completionRate: Double,
         success: Bool,
         summaryEn: String,
-        summaryEs: String,
         result: GoalStructuredResult?
     ) {
         self.objective = objective
@@ -286,7 +283,6 @@ struct GoalResultSummary: Codable, Equatable, Sendable {
         self.completionRate = completionRate
         self.success = success
         self.summaryEn = summaryEn
-        self.summaryEs = summaryEs
         self.result = result
     }
 
@@ -299,7 +295,6 @@ struct GoalResultSummary: Codable, Equatable, Sendable {
         completionRate = try container.decodeIfPresent(Double.self, forKey: .completionRate) ?? 0
         success = try container.decodeIfPresent(Bool.self, forKey: .success) ?? false
         summaryEn = try container.decodeIfPresent(String.self, forKey: .summaryEn) ?? ""
-        summaryEs = try container.decodeIfPresent(String.self, forKey: .summaryEs) ?? ""
         result = try container.decodeIfPresent(GoalStructuredResult.self, forKey: .result)
     }
 }

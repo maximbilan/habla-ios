@@ -164,12 +164,6 @@ struct GoalResultCompactCard: View {
                     .font(.system(size: 12, weight: .medium))
                     .foregroundColor(.appTextPrimary)
             }
-
-            if !result.summaryEs.isEmpty {
-                Text(result.summaryEs)
-                    .font(.system(size: 12))
-                    .foregroundColor(.appTextSecondary)
-            }
         }
         .padding(12)
         .background(

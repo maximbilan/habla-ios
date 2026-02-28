@@ -348,12 +348,6 @@ private struct GoalResultDetailSection: View {
                     .foregroundColor(.appTextPrimary)
                     .padding(.top, 2)
             }
-
-            if !result.summaryEs.isEmpty {
-                Text(result.summaryEs)
-                    .font(.system(size: 12))
-                    .foregroundColor(.appTextSecondary)
-            }
         }
         .padding(14)
         .background(
