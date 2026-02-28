@@ -98,12 +98,6 @@ struct SettingsView: View {
                             }
                         )
 
-                        Text(state.serverURL)
-                            .font(.system(size: 12, weight: .regular, design: .monospaced))
-                            .foregroundColor(.appTextSecondary)
-                            .lineLimit(2)
-                            .truncationMode(.middle)
-
                         voicePickerRow(
                             selectedVoiceGender: state.selectedVoiceGender,
                             onSelect: { voiceGender in
