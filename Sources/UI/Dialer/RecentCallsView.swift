@@ -8,7 +8,6 @@ import SwiftUI
 struct RecentCallsView: View {
     let calls: [CallRecord]
     let onCallTapped: (String) -> Void
-    let onConversationTapped: (CallRecord) -> Void
     let onSummaryTapped: (CallRecord) -> Void
 
     var body: some View {
@@ -76,14 +75,6 @@ struct RecentCallsView: View {
                                             Capsule()
                                                 .fill(Color.appSurface)
                                         )
-                                }
-
-                                Button {
-                                    onConversationTapped(call)
-                                } label: {
-                                    Image(systemName: "text.bubble")
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(.appAccent)
                                 }
 
                                 Button {

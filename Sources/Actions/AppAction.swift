@@ -69,8 +69,6 @@ enum AppAction: Sendable {
     case navigateTo(ActiveScreen)
     case openCallSummary(CallRecord)
     case closeCallSummary
-    case openCallConversation(CallRecord)
-    case closeCallConversation
 
     // Call history
     case loadCallHistory
