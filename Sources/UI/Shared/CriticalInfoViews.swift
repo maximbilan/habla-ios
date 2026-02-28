@@ -42,10 +42,16 @@ struct VerifiedFactsSummaryCard: View {
     let title: String
     let facts: [VerifiedFact]
     var maxItems: Int = 4
+    var showOnlyVerifiedWhenAvailable: Bool = true
 
     private var visibleFacts: [VerifiedFact] {
         let verified = facts.filter { $0.verified }
-        let source = verified.isEmpty ? facts : verified
+        let source: [VerifiedFact]
+        if showOnlyVerifiedWhenAvailable {
+            source = verified.isEmpty ? facts : verified
+        } else {
+            source = facts
+        }
         return Array(source.prefix(maxItems))
     }
 

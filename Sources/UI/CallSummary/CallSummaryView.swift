@@ -57,11 +57,12 @@ struct CallSummaryView: View {
                     VerifiedFactsSummaryCard(
                         title: "Verified Facts",
                         facts: facts,
-                        maxItems: max(6, facts.count)
+                        maxItems: max(6, facts.count),
+                        showOnlyVerifiedWhenAvailable: false
                     )
 
                     if facts.isEmpty {
-                        Text("No verified critical facts were captured for this call.")
+                        Text("No critical facts were captured for this call.")
                             .font(.system(size: 14, weight: .medium))
                             .foregroundColor(.appTextSecondary)
                             .padding(.top, 6)
