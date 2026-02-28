@@ -68,6 +68,14 @@ struct AgentSetupView: View {
                         .font(.system(size: 15, weight: .medium, design: .monospaced))
                         .foregroundColor(.appTextSecondary)
 
+                    if !state.verifiedFactsSummary.isEmpty {
+                        VerifiedFactsSummaryCard(
+                            title: "Last Call Verified Facts",
+                            facts: state.verifiedFactsSummary,
+                            maxItems: 4
+                        )
+                    }
+
                     if let memory = matchedCallerMemory {
                         VStack(alignment: .leading, spacing: 6) {
                             Text("Caller memory will be applied")

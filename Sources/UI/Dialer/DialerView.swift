@@ -50,14 +50,6 @@ struct DialerView: View {
                         }
                     }
 
-                    if !state.verifiedFactsSummary.isEmpty {
-                        VerifiedFactsSummaryCard(
-                            title: "Last Call Verified Facts",
-                            facts: state.verifiedFactsSummary,
-                            maxItems: 3
-                        )
-                    }
-
                     if let memory = matchedCallerMemory {
                         CallerMemoryPreviewCard(memory: memory)
                     }
