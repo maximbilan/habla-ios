@@ -178,6 +178,12 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.activeScreen = screen
 
     case .openCallSummary(let record):
+        switch state.activeScreen {
+        case .callHistory:
+            state.callSummaryReturnScreen = .callHistory
+        default:
+            state.callSummaryReturnScreen = .dialer
+        }
         state.selectedCallSummaryRecord = record
         state.verifiedFactsSummary = sortedVerifiedFacts(record.verifiedFacts)
         state.activeCriticalConfirmation = nil
@@ -186,7 +192,8 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .closeCallSummary:
         state.selectedCallSummaryRecord = nil
         state.activeCriticalConfirmation = nil
-        state.activeScreen = .dialer
+        state.activeScreen = state.callSummaryReturnScreen
+        state.callSummaryReturnScreen = .dialer
 
     case .callHistoryLoaded(let calls):
         state.recentCalls = calls

@@ -33,6 +33,7 @@ struct AppState: Equatable {
     // UI state
     var activeScreen: ActiveScreen = .dialer
     var selectedCallSummaryRecord: CallRecord? = nil
+    var callSummaryReturnScreen: ActiveScreen = .dialer
 
     // Agent mode
     var agentPrompt: String = ""
