@@ -4,6 +4,8 @@ struct AgentSetupView: View {
     @EnvironmentObject var store: Store
     @State private var promptText: String = ""
     @State private var userName: String = ""
+    @State private var goalObjective: String = ""
+    @State private var goalRequiredFieldsText: String = ""
 
     private var state: AppState { store.state }
     private var matchedCallerMemory: CallerMemory? {
@@ -131,6 +133,36 @@ struct AgentSetupView: View {
                     }
 
                     VStack(alignment: .leading, spacing: 8) {
+                        Text("Goal (optional)")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundColor(.appTextSecondary)
+                            .textCase(.uppercase)
+
+                        TextField("Confirm appointment date/time and address", text: $goalObjective)
+                            .font(.system(size: 16))
+                            .foregroundColor(.appTextPrimary)
+                            .padding(12)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
+                            .onChange(of: goalObjective) { _, newValue in
+                                store.dispatch(.agentGoalObjectiveChanged(newValue))
+                            }
+
+                        Text("Required fields (comma-separated)")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundColor(.appTextSecondary)
+                            .textCase(.uppercase)
+
+                        TextField("date, time, location, price, next_step", text: $goalRequiredFieldsText)
+                            .font(.system(size: 15))
+                            .foregroundColor(.appTextPrimary)
+                            .padding(12)
+                            .background(RoundedRectangle(cornerRadius: 10).fill(Color.appSurface))
+                            .onChange(of: goalRequiredFieldsText) { _, newValue in
+                                store.dispatch(.agentGoalRequiredFieldsChanged(newValue))
+                            }
+                    }
+
+                    VStack(alignment: .leading, spacing: 8) {
                         Text("Quick suggestions")
                             .font(.system(size: 14, weight: .semibold))
                             .foregroundColor(.appTextSecondary)
@@ -160,7 +192,9 @@ struct AgentSetupView: View {
                             .initiateAgentCall(
                                 to: state.phoneNumber,
                                 prompt: promptText.trimmingCharacters(in: .whitespacesAndNewlines),
-                                userName: userName.trimmingCharacters(in: .whitespacesAndNewlines)
+                                userName: userName.trimmingCharacters(in: .whitespacesAndNewlines),
+                                goalObjective: goalObjective.trimmingCharacters(in: .whitespacesAndNewlines),
+                                goalRequiredFields: parseGoalFields(goalRequiredFieldsText)
                             )
                         )
                     } label: {
@@ -185,7 +219,16 @@ struct AgentSetupView: View {
         .onAppear {
             promptText = state.agentPrompt
             userName = state.agentUserName
+            goalObjective = state.agentGoalObjective
+            goalRequiredFieldsText = state.agentGoalRequiredFieldsText
         }
+    }
+
+    private func parseGoalFields(_ raw: String) -> [String] {
+        raw
+            .split(separator: ",")
+            .map { $0.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
     }
 }
 

@@ -38,12 +38,16 @@ struct AppState: Equatable {
     // Agent mode
     var agentPrompt: String = ""
     var agentUserName: String = UserDefaults.standard.string(forKey: "agentUserName") ?? ""
+    var agentGoalObjective: String = ""
+    var agentGoalRequiredFieldsText: String = ""
     var agentTranscript: [TranscriptEntry] = []
     var liveCallConversation: [ConversationTurn] = []
     var agentStatus: AgentStatus = .idle
     var agentMidCallInput: String = ""
     var activeCriticalConfirmation: CriticalConfirmation? = nil
     var verifiedFactsSummary: [VerifiedFact] = []
+    var agentGoalProgress: GoalProgressPayload? = nil
+    var agentGoalResult: GoalResultSummary? = nil
 
     // Settings
     var selectedBackendService: BackendService = BackendService(

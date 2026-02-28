@@ -108,6 +108,10 @@ final class AgentWebSocketMiddleware: Middleware, @unchecked Sendable {
 
         case .verifiedFactsSummary(let facts):
             dispatch(.verifiedFactsSummaryReceived(facts))
+        case .goalProgress(let progress):
+            dispatch(.goalProgressReceived(progress))
+        case .goalResultSummary(let result):
+            dispatch(.goalResultReceived(result))
         }
     }
 

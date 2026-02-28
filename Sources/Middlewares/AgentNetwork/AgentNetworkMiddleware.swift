@@ -9,7 +9,13 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
 
     func process(action: AppAction, state: AppState, dispatch: @escaping @MainActor (AppAction) -> Void) {
         switch action {
-        case .initiateAgentCall(let phoneNumber, let prompt, let userName):
+        case .initiateAgentCall(
+            let phoneNumber,
+            let prompt,
+            let userName,
+            let goalObjective,
+            let goalRequiredFields
+        ):
             let serverURL = state.serverURL
             let fromNumber = resolveCallerId(state: state)
             let calleeLanguage = resolveCalleeLanguage(for: phoneNumber, state: state)
@@ -28,6 +34,8 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                         from: fromNumber,
                         prompt: personalizedPrompt,
                         userName: userName,
+                        goalObjective: goalObjective,
+                        goalRequiredFields: goalRequiredFields,
                         language: calleeLanguage,
                         voiceGender: voiceGender,
                         serverURL: serverURL
@@ -58,6 +66,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
             let phoneNumber = state.phoneNumber
             let duration = state.callDuration
             let verifiedFacts = state.verifiedFactsSummary
+            let goalResult = state.agentGoalResult
             let conversation = state.agentTranscript
                 .map { $0.asConversationTurn() }
                 .sorted { $0.timestamp < $1.timestamp }
@@ -74,7 +83,8 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                     duration: duration,
                     status: "completed",
                     verifiedFacts: verifiedFacts,
-                    conversation: conversation
+                    conversation: conversation,
+                    goalResult: goalResult
                 )
                 await MainActor.run {
                     dispatch(.saveCallRecord(record))

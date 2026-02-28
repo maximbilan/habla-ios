@@ -32,8 +32,10 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                     let retainedIds = Set(retainedModels.map(\.id))
                     conversationArchive.prune(excluding: retainedIds)
                     let records = retainedModels.map { model in
-                        model.toCallRecord(
-                            conversation: conversationArchive.loadConversation(for: model.id)
+                        let archive = conversationArchive.loadArchive(for: model.id)
+                        return model.toCallRecord(
+                            conversation: archive.conversation,
+                            goalResult: archive.goalResult
                         )
                     }
                     dispatch(.callHistoryLoaded(records))
@@ -57,7 +59,11 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                     )
                     context.insert(model)
                     try context.save()
-                    try? conversationArchive.saveConversation(record.conversation, for: record.id)
+                    try? conversationArchive.saveArchive(
+                        conversation: record.conversation,
+                        goalResult: record.goalResult,
+                        for: record.id
+                    )
                     dispatch(.loadCallHistory)
                 } catch {
                     // Keep call UI responsive even if persistence fails.
@@ -94,6 +100,21 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
 }
 
 private final class ConversationArchiveStore: @unchecked Sendable {
+    struct ArchiveData: Equatable, Sendable {
+        let conversation: [ConversationTurn]
+        let goalResult: GoalResultSummary?
+    }
+
+    private struct ArchivePayload: Codable {
+        let conversation: [ConversationTurn]
+        let goalResult: GoalResultSummary?
+
+        enum CodingKeys: String, CodingKey {
+            case conversation
+            case goalResult = "goal_result"
+        }
+    }
+
     private let directoryURL: URL?
     private let fileManager = FileManager.default
 
@@ -112,24 +133,41 @@ private final class ConversationArchiveStore: @unchecked Sendable {
         }
     }
 
-    func loadConversation(for callID: UUID) -> [ConversationTurn] {
+    func loadArchive(for callID: UUID) -> ArchiveData {
         guard let fileURL = fileURL(for: callID),
               let data = try? Data(contentsOf: fileURL) else {
-            return []
+            return ArchiveData(conversation: [], goalResult: nil)
         }
 
-        return (try? JSONDecoder().decode([ConversationTurn].self, from: data)) ?? []
+        if let payload = try? JSONDecoder().decode(ArchivePayload.self, from: data) {
+            return ArchiveData(
+                conversation: payload.conversation,
+                goalResult: payload.goalResult
+            )
+        }
+
+        // Backward compatibility with legacy archive format that stored only conversation turns.
+        if let conversation = try? JSONDecoder().decode([ConversationTurn].self, from: data) {
+            return ArchiveData(conversation: conversation, goalResult: nil)
+        }
+
+        return ArchiveData(conversation: [], goalResult: nil)
     }
 
-    func saveConversation(_ conversation: [ConversationTurn], for callID: UUID) throws {
+    func saveArchive(
+        conversation: [ConversationTurn],
+        goalResult: GoalResultSummary?,
+        for callID: UUID
+    ) throws {
         guard let fileURL = fileURL(for: callID) else { return }
 
-        if conversation.isEmpty {
+        if conversation.isEmpty && goalResult == nil {
             try? fileManager.removeItem(at: fileURL)
             return
         }
 
-        let data = try JSONEncoder().encode(conversation)
+        let payload = ArchivePayload(conversation: conversation, goalResult: goalResult)
+        let data = try JSONEncoder().encode(payload)
         try data.write(to: fileURL, options: .atomic)
     }
 

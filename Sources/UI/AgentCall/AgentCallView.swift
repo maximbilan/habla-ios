@@ -2,7 +2,6 @@ import SwiftUI
 
 struct AgentCallView: View {
     @EnvironmentObject var store: Store
-    @State private var scheduledEndTask: Task<Void, Never>?
 
     private var state: AppState { store.state }
 
@@ -42,6 +41,18 @@ struct AgentCallView: View {
                 )
                 .padding(.horizontal, 12)
                 .padding(.bottom, 8)
+            }
+
+            if let progress = state.agentGoalProgress {
+                GoalProgressCard(progress: progress)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
+            }
+
+            if let result = state.agentGoalResult {
+                GoalResultCompactCard(result: result)
+                    .padding(.horizontal, 12)
+                    .padding(.bottom, 8)
             }
 
             Divider()
@@ -101,11 +112,6 @@ struct AgentCallView: View {
 
                     Button {
                         store.dispatch(.endAgentConversation("Thank them for their help and say goodbye politely."))
-                        scheduledEndTask?.cancel()
-                        scheduledEndTask = Task { @MainActor in
-                            try? await Task.sleep(nanoseconds: 2_700_000_000)
-                            store.dispatch(.endAgentCall)
-                        }
                     } label: {
                         Text("🔴 End Call")
                             .font(.system(size: 16, weight: .semibold))
@@ -124,8 +130,5 @@ struct AgentCallView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color.appBackground)
-        .onDisappear {
-            scheduledEndTask?.cancel()
-        }
     }
 }

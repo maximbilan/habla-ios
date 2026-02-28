@@ -70,7 +70,6 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
     let candidateValue: String
     let confidence: Double
     let promptEn: String
-    let promptEs: String
 
     var id: String {
         "\(factType)|\(reason)|\(sourceValue ?? "")|\(candidateValue)"
@@ -83,7 +82,6 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         case candidateValue = "candidate_value"
         case confidence
         case promptEn = "prompt_en"
-        case promptEs = "prompt_es"
     }
 
     init(
@@ -92,8 +90,7 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         sourceValue: String?,
         candidateValue: String,
         confidence: Double,
-        promptEn: String,
-        promptEs: String
+        promptEn: String
     ) {
         self.factType = factType
         self.reason = reason
@@ -101,7 +98,6 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         self.candidateValue = candidateValue
         self.confidence = confidence
         self.promptEn = promptEn
-        self.promptEs = promptEs
     }
 
     init(from decoder: Decoder) throws {
@@ -113,7 +109,192 @@ struct CriticalConfirmation: Codable, Equatable, Sendable, Identifiable {
         confidence = try container.decodeIfPresent(Double.self, forKey: .confidence) ?? 0
         promptEn = try container.decodeIfPresent(String.self, forKey: .promptEn)
             ?? "Please confirm the critical detail."
-        promptEs = try container.decodeIfPresent(String.self, forKey: .promptEs)
-            ?? "Por favor confirma el dato importante."
+    }
+}
+
+struct GoalField: Codable, Equatable, Sendable, Identifiable {
+    let name: String
+    let value: String
+    let confidence: Double
+    let occurrences: Int
+    let sourceRole: String?
+    let verified: Bool
+
+    var id: String { "\(name)|\(value.lowercased())" }
+
+    enum CodingKeys: String, CodingKey {
+        case name
+        case value
+        case confidence
+        case occurrences
+        case sourceRole = "source_role"
+        case verified
+    }
+
+    init(
+        name: String,
+        value: String,
+        confidence: Double = 0,
+        occurrences: Int = 1,
+        sourceRole: String? = nil,
+        verified: Bool = false
+    ) {
+        self.name = name
+        self.value = value
+        self.confidence = confidence
+        self.occurrences = occurrences
+        self.sourceRole = sourceRole
+        self.verified = verified
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        name = try container.decode(String.self, forKey: .name)
+        value = try container.decode(String.self, forKey: .value)
+        confidence = try container.decodeIfPresent(Double.self, forKey: .confidence) ?? 0
+        occurrences = try container.decodeIfPresent(Int.self, forKey: .occurrences) ?? 1
+        sourceRole = try container.decodeIfPresent(String.self, forKey: .sourceRole)
+        verified = try container.decodeIfPresent(Bool.self, forKey: .verified) ?? false
+    }
+
+    var displayName: String {
+        switch name {
+        case "next_step":
+            return "Next Step"
+        case "phone_number":
+            return "Phone"
+        default:
+            return name.replacingOccurrences(of: "_", with: " ").capitalized
+        }
+    }
+}
+
+struct GoalProgressPayload: Codable, Equatable, Sendable {
+    let objective: String
+    let requiredFields: [String]
+    let fields: [GoalField]
+    let missingFields: [String]
+    let completionRate: Double
+    let success: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case objective
+        case requiredFields = "required_fields"
+        case fields
+        case missingFields = "missing_fields"
+        case completionRate = "completion_rate"
+        case success
+    }
+
+    init(
+        objective: String,
+        requiredFields: [String],
+        fields: [GoalField],
+        missingFields: [String],
+        completionRate: Double,
+        success: Bool
+    ) {
+        self.objective = objective
+        self.requiredFields = requiredFields
+        self.fields = fields
+        self.missingFields = missingFields
+        self.completionRate = completionRate
+        self.success = success
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        objective = try container.decodeIfPresent(String.self, forKey: .objective) ?? ""
+        requiredFields = try container.decodeIfPresent([String].self, forKey: .requiredFields) ?? []
+        fields = try container.decodeIfPresent([GoalField].self, forKey: .fields) ?? []
+        missingFields = try container.decodeIfPresent([String].self, forKey: .missingFields) ?? []
+        completionRate = try container.decodeIfPresent(Double.self, forKey: .completionRate) ?? 0
+        success = try container.decodeIfPresent(Bool.self, forKey: .success) ?? false
+    }
+}
+
+struct GoalResultFieldValue: Codable, Equatable, Sendable {
+    let value: String
+    let confidence: Double
+    let occurrences: Int
+    let sourceRole: String?
+    let verified: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case value
+        case confidence
+        case occurrences
+        case sourceRole = "source_role"
+        case verified
+    }
+}
+
+struct GoalStructuredResult: Codable, Equatable, Sendable {
+    let objective: String
+    let requiredFields: [String]
+    let fields: [String: GoalResultFieldValue]
+    let missingFields: [String]
+    let success: Bool
+
+    enum CodingKeys: String, CodingKey {
+        case objective
+        case requiredFields = "required_fields"
+        case fields
+        case missingFields = "missing_fields"
+        case success
+    }
+}
+
+struct GoalResultSummary: Codable, Equatable, Sendable {
+    let objective: String
+    let requiredFields: [String]
+    let fields: [GoalField]
+    let missingFields: [String]
+    let completionRate: Double
+    let success: Bool
+    let summaryEn: String
+    let result: GoalStructuredResult?
+
+    enum CodingKeys: String, CodingKey {
+        case objective
+        case requiredFields = "required_fields"
+        case fields
+        case missingFields = "missing_fields"
+        case completionRate = "completion_rate"
+        case success
+        case summaryEn = "summary_en"
+        case result
+    }
+
+    init(
+        objective: String,
+        requiredFields: [String],
+        fields: [GoalField],
+        missingFields: [String],
+        completionRate: Double,
+        success: Bool,
+        summaryEn: String,
+        result: GoalStructuredResult?
+    ) {
+        self.objective = objective
+        self.requiredFields = requiredFields
+        self.fields = fields
+        self.missingFields = missingFields
+        self.completionRate = completionRate
+        self.success = success
+        self.summaryEn = summaryEn
+        self.result = result
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        objective = try container.decodeIfPresent(String.self, forKey: .objective) ?? ""
+        requiredFields = try container.decodeIfPresent([String].self, forKey: .requiredFields) ?? []
+        fields = try container.decodeIfPresent([GoalField].self, forKey: .fields) ?? []
+        missingFields = try container.decodeIfPresent([String].self, forKey: .missingFields) ?? []
+        completionRate = try container.decodeIfPresent(Double.self, forKey: .completionRate) ?? 0
+        success = try container.decodeIfPresent(Bool.self, forKey: .success) ?? false
+        summaryEn = try container.decodeIfPresent(String.self, forKey: .summaryEn) ?? ""
+        result = try container.decodeIfPresent(GoalStructuredResult.self, forKey: .result)
     }
 }
