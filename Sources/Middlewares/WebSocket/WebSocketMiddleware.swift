@@ -9,6 +9,8 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
     private let webSocketService: WebSocketService
     private let audioService: AudioService
     private let conversationBuffer: CallConversationBuffer
+    private var remoteActivityResetTask: Task<Void, Never>?
+    private var didMarkConnectedFromAudio = false
 
     init(
         webSocketService: WebSocketService = WebSocketService(),
@@ -23,6 +25,9 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
     func process(action: AppAction, state: AppState, dispatch: @escaping @MainActor (AppAction) -> Void) {
         switch action {
         case .connectWebSocket(let callSid):
+            didMarkConnectedFromAudio = false
+            remoteActivityResetTask?.cancel()
+            remoteActivityResetTask = nil
             conversationBuffer.reset()
             let serverURL = state.serverURL
             let ws = webSocketService
@@ -31,18 +36,23 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
             Task {
                 do {
                     try await ws.connect(callSid: callSid, serverURL: serverURL)
-                    await MainActor.run {
-                        dispatch(.callStatusUpdated(.connected))
-                    }
 
                     await ws.receiveLoop(onAudio: { data in
                         Task {
+                            if !self.didMarkConnectedFromAudio {
+                                self.didMarkConnectedFromAudio = true
+                                await MainActor.run {
+                                    dispatch(.callStatusUpdated(.connected))
+                                }
+                            }
+
                             await audio.playAudio(data)
                             await MainActor.run {
                                 dispatch(.receivingAudioChanged(true))
                             }
-                            try? await Task.sleep(nanoseconds: 100_000_000)
-                            await MainActor.run {
+                            self.remoteActivityResetTask?.cancel()
+                            self.remoteActivityResetTask = Task { @MainActor in
+                                try? await Task.sleep(nanoseconds: 300_000_000)
                                 dispatch(.receivingAudioChanged(false))
                             }
                         }
@@ -54,6 +64,8 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
                     }
                     )
 
+                    remoteActivityResetTask?.cancel()
+                    remoteActivityResetTask = nil
                     await MainActor.run {
                         dispatch(.callEnded)
                     }
@@ -66,11 +78,15 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
             }
 
         case .endCall:
+            remoteActivityResetTask?.cancel()
+            remoteActivityResetTask = nil
             Task {
                 await webSocketService.disconnect()
             }
 
         case .callFailed:
+            remoteActivityResetTask?.cancel()
+            remoteActivityResetTask = nil
             Task {
                 await webSocketService.disconnect()
             }
@@ -86,6 +102,12 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
         dispatch: @escaping @MainActor (AppAction) -> Void
     ) {
         switch message {
+        case .status(let status):
+            let mappedStatus = mapCallStatus(status)
+            dispatch(.callStatusUpdated(mappedStatus))
+            if mappedStatus == .connected {
+                didMarkConnectedFromAudio = true
+            }
         case .criticalConfirmation(let confirmation):
             dispatch(.criticalConfirmationReceived(confirmation))
         case .verifiedFactsSummary(let facts):
@@ -96,8 +118,27 @@ final class WebSocketMiddleware: Middleware, @unchecked Sendable {
             conversationBuffer.append(role: .caller, text: text)
         case .error(let text):
             dispatch(.callFailed(.webSocketError(text)))
-        case .status, .interrupted:
-            break
+        case .interrupted:
+            dispatch(.receivingAudioChanged(false))
+        }
+    }
+
+    private func mapCallStatus(_ raw: String) -> CallStatus {
+        switch raw.lowercased() {
+        case "initiating":
+            return .initiating
+        case "connecting":
+            return .connecting
+        case "ringing":
+            return .ringing
+        case "connected", "in_progress", "in-progress":
+            return .connected
+        case "ended", "completed":
+            return .ended
+        case "failed":
+            return .failed("Call failed")
+        default:
+            return .connecting
         }
     }
 }

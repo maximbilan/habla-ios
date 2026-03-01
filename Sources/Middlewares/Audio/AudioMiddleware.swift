@@ -8,6 +8,7 @@ import AVFoundation
 final class AudioMiddleware: Middleware, @unchecked Sendable {
     private let audioService: AudioService
     private let webSocketService: WebSocketService
+    private var hasRemotePresence = false
 
     init(audioService: AudioService, webSocketService: WebSocketService) {
         self.audioService = audioService
@@ -17,6 +18,7 @@ final class AudioMiddleware: Middleware, @unchecked Sendable {
     func process(action: AppAction, state: AppState, dispatch: @escaping @MainActor (AppAction) -> Void) {
         switch action {
         case .startAudioCapture:
+            hasRemotePresence = false
             let audio = audioService
             let ws = webSocketService
 
@@ -43,6 +45,8 @@ final class AudioMiddleware: Middleware, @unchecked Sendable {
                             }
                         }
                     )
+
+                    await audio.startProgressTone()
                 } catch {
                     let appError = (error as? AppError) ?? .audioError(error.localizedDescription)
                     await MainActor.run {
@@ -51,8 +55,24 @@ final class AudioMiddleware: Middleware, @unchecked Sendable {
                 }
             }
 
-        case .endCall, .callFailed, .callEnded:
+        case .callStatusUpdated(.connected):
+            guard !hasRemotePresence else { break }
+            hasRemotePresence = true
             Task {
+                await audioService.stopProgressTone(resetPlayer: false)
+            }
+
+        case .receivingAudioChanged(let receiving):
+            guard receiving, !hasRemotePresence else { break }
+            hasRemotePresence = true
+            Task {
+                await audioService.stopProgressTone(resetPlayer: true)
+            }
+
+        case .endCall, .callFailed, .callEnded:
+            hasRemotePresence = false
+            Task {
+                await audioService.stopProgressTone(resetPlayer: true)
                 await audioService.stopCapture()
             }
 

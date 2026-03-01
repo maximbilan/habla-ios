@@ -10,6 +10,7 @@ actor AudioService {
     private var playerNode: AVAudioPlayerNode?
     private var isCapturing: Bool = false
     private var isMuted: Bool = false
+    private var progressToneTask: Task<Void, Never>?
 
     func configureSession(useSpeaker: Bool) throws {
         let session = AVAudioSession.sharedInstance()
@@ -87,6 +88,7 @@ actor AudioService {
     }
 
     func stopCapture() {
+        stopProgressTone(resetPlayer: true)
         audioEngine?.inputNode.removeTap(onBus: 0)
         playerNode?.stop()
         audioEngine?.stop()
@@ -114,4 +116,61 @@ actor AudioService {
         let session = AVAudioSession.sharedInstance()
         try session.overrideOutputAudioPort(speaker ? .speaker : .none)
     }
+
+    func startProgressTone() {
+        guard isCapturing else { return }
+        guard progressToneTask == nil else { return }
+
+        let toneData = Self.progressTonePCMData
+        progressToneTask = Task { [weak self] in
+            while !Task.isCancelled {
+                guard let self else { return }
+                await self.playToneChunk(toneData)
+                try? await Task.sleep(nanoseconds: 2_000_000_000)
+            }
+        }
+    }
+
+    func stopProgressTone(resetPlayer: Bool = false) {
+        progressToneTask?.cancel()
+        progressToneTask = nil
+        if resetPlayer {
+            playerNode?.stop()
+        }
+    }
+
+    private func playToneChunk(_ data: Data) {
+        guard let playerNode, let audioEngine, audioEngine.isRunning else { return }
+        guard let buffer = AudioConverter.dataToPCMBuffer(data) else { return }
+        playerNode.scheduleBuffer(buffer, completionHandler: nil)
+        if !playerNode.isPlaying {
+            playerNode.play()
+        }
+    }
+
+    private static let progressTonePCMData: Data = {
+        let durationSeconds = 0.35
+        let sampleRate = AudioConstants.sampleRate
+        let frameCount = Int(sampleRate * durationSeconds)
+        let fadeSamples = Int(sampleRate * 0.015)
+        let amplitude = 0.18
+        let lowFrequency = 425.0
+        let highFrequency = 480.0
+
+        var samples = [Int16](repeating: 0, count: frameCount)
+        for index in 0..<frameCount {
+            let time = Double(index) / sampleRate
+            let mixed = (sin(2 * .pi * lowFrequency * time) + sin(2 * .pi * highFrequency * time)) * 0.5
+
+            let fadeIn = min(1.0, Double(index) / Double(max(1, fadeSamples)))
+            let fadeOut = min(1.0, Double(frameCount - index) / Double(max(1, fadeSamples)))
+            let envelope = min(fadeIn, fadeOut)
+
+            let value = mixed * amplitude * envelope
+            let scaled = value * Double(Int16.max)
+            samples[index] = Int16(max(Double(Int16.min), min(Double(Int16.max), scaled)))
+        }
+
+        return samples.withUnsafeBufferPointer { Data(buffer: $0) }
+    }()
 }

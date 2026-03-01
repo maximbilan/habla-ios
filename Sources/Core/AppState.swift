@@ -29,6 +29,7 @@ struct AppState: Equatable {
     var isSpeaker: Bool = false
     var inputAudioLevel: Float = 0.0
     var isReceivingAudio: Bool = false
+    var liveCallPhase: LiveCallPhase = .idle
 
     // UI state
     var activeScreen: ActiveScreen = .dialer
@@ -191,6 +192,26 @@ enum AgentStatus: Equatable, Sendable {
     case listening
     case speaking
     case thinking
+}
+
+enum LiveCallPhase: Equatable, Sendable {
+    case idle
+    case listening
+    case translating
+    case speaking
+
+    var title: String {
+        switch self {
+        case .idle:
+            return "Idle"
+        case .listening:
+            return "Listening"
+        case .translating:
+            return "Translating"
+        case .speaking:
+            return "Speaking"
+        }
+    }
 }
 
 struct PhoneCountry: Equatable, Sendable, Identifiable {
