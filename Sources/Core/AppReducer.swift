@@ -41,7 +41,6 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callDuration = 0
         state.activeCriticalConfirmation = nil
         state.verifiedFactsSummary = []
-        state.liveCallConversation = []
         state.activeScreen = .activeCall
 
     case .callInitiated(let callSid):
@@ -67,7 +66,6 @@ func appReducer(state: inout AppState, action: AppAction) {
         }
         state.agentStatus = .idle
         state.agentTranscript = []
-        state.liveCallConversation = []
         state.agentMidCallInput = ""
 
     case .agentPromptChanged(let text):
@@ -83,7 +81,6 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.activeCriticalConfirmation = nil
         state.verifiedFactsSummary = []
         state.agentTranscript = []
-        state.liveCallConversation = []
         state.agentStatus = .idle
         state.activeScreen = .agentCall
 
@@ -111,19 +108,6 @@ func appReducer(state: inout AppState, action: AppAction) {
             state.agentTranscript[index] = mergedTranscriptEntry(existing: state.agentTranscript[index], incoming: updatedEntry)
         } else {
             state.agentTranscript.append(updatedEntry)
-        }
-
-    case .callConversationTurnReceived(let turn):
-        let normalizedText = normalizedConversationText(turn.text)
-        guard !normalizedText.isEmpty else { break }
-
-        if let index = state.liveCallConversation.lastIndex(where: { $0.id == turn.id }) {
-            state.liveCallConversation[index] = turn
-        } else if let last = state.liveCallConversation.last,
-                  shouldCoalesceConversation(existing: last, incoming: turn) {
-            state.liveCallConversation[state.liveCallConversation.count - 1] = turn
-        } else {
-            state.liveCallConversation.append(turn)
         }
 
     case .agentStatusUpdated(let status):
@@ -156,7 +140,6 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.activeScreen = .dialer
         }
         state.agentTranscript = []
-        state.liveCallConversation = []
         state.agentMidCallInput = ""
 
     case .toggleMute:
@@ -401,19 +384,6 @@ private func applyCallerMemoryLanguagePreference(
         state.translationSourceLanguage = replacement
         UserDefaults.standard.set(replacement, forKey: AppState.translationSourceLanguageKey)
     }
-}
-
-private func normalizedConversationText(_ text: String) -> String {
-    text
-        .trimmingCharacters(in: .whitespacesAndNewlines)
-        .replacingOccurrences(of: "  ", with: " ")
-        .lowercased()
-}
-
-private func shouldCoalesceConversation(existing: ConversationTurn, incoming: ConversationTurn) -> Bool {
-    guard existing.role == incoming.role else { return false }
-    guard normalizedConversationText(existing.text) == normalizedConversationText(incoming.text) else { return false }
-    return abs(existing.timestamp.timeIntervalSince(incoming.timestamp)) <= 2.0
 }
 
 private func resolveCountryCode(for rawPhoneNumber: String) -> String? {

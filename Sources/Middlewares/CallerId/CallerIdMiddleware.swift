@@ -122,8 +122,7 @@ final class CallerIdMiddleware: Middleware, @unchecked Sendable {
                         VerifiedCallerId(
                             id: $0.sid,
                             phoneNumber: $0.phoneNumber,
-                            friendlyName: $0.friendlyName,
-                            dateCreated: $0.dateCreated
+                            friendlyName: $0.friendlyName
                         )
                     }
                     await MainActor.run {
