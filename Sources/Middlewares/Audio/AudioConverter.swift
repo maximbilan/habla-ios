@@ -8,10 +8,8 @@
 enum AudioConstants {
     static let sampleRate: Double = 16000
     static let channels: AVAudioChannelCount = 1
-    static let bitsPerSample: UInt32 = 16
     static let bytesPerFrame: UInt32 = 2
     static let frameDuration: Double = 0.02
-    static let frameSize: Int = 640
 
     static var pcmFormat: AVAudioFormat {
         AVAudioFormat(

@@ -39,7 +39,6 @@ struct AppState: Equatable {
     var agentPrompt: String = ""
     var agentUserName: String = UserDefaults.standard.string(forKey: "agentUserName") ?? ""
     var agentTranscript: [TranscriptEntry] = []
-    var liveCallConversation: [ConversationTurn] = []
     var agentStatus: AgentStatus = .idle
     var agentMidCallInput: String = ""
     var activeCriticalConfirmation: CriticalConfirmation? = nil
@@ -315,10 +314,6 @@ enum TranslationLanguageCatalog {
             return languageByNormalizedCode[normalize(code: canonical)]
         }
         return languageByNormalizedCode[normalized]
-    }
-
-    static func languageLabel(for code: String) -> String {
-        language(code: code)?.label ?? code
     }
 
     static func languageLabelWithEmoji(for code: String) -> String {

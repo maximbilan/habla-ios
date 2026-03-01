@@ -15,7 +15,6 @@ struct CallRequest: Codable, Sendable {
 
 struct CallResponse: Codable, Sendable {
     let call_sid: String
-    let status: String
 }
 
 struct AgentCallRequest: Codable, Sendable {
@@ -29,5 +28,4 @@ struct AgentCallRequest: Codable, Sendable {
 
 struct AgentCallResponse: Codable, Sendable {
     let call_sid: String
-    let status: String
 }
