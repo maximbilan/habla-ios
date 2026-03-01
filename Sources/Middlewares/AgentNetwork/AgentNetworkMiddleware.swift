@@ -77,6 +77,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
                     phoneNumber: phoneNumber,
                     duration: duration,
                     status: "completed",
+                    mode: .agent,
                     verifiedFacts: verifiedFacts,
                     conversation: conversation
                 )

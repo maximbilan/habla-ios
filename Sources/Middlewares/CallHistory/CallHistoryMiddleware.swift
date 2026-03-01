@@ -34,6 +34,7 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                     let records = retainedModels.map { model in
                         let archive = conversationArchive.loadArchive(for: model.id)
                         return model.toCallRecord(
+                            mode: archive.mode,
                             conversation: archive.conversation
                         )
                     }
@@ -59,6 +60,7 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
                     context.insert(model)
                     try context.save()
                     try? conversationArchive.saveArchive(
+                        mode: record.mode,
                         conversation: record.conversation,
                         for: record.id
                     )
@@ -99,10 +101,12 @@ final class CallHistoryMiddleware: Middleware, @unchecked Sendable {
 
 private final class ConversationArchiveStore: @unchecked Sendable {
     struct ArchiveData: Equatable, Sendable {
+        let mode: CallMode
         let conversation: [ConversationTurn]
     }
 
     private struct ArchivePayload: Codable {
+        let mode: CallMode?
         let conversation: [ConversationTurn]
     }
 
@@ -127,22 +131,30 @@ private final class ConversationArchiveStore: @unchecked Sendable {
     func loadArchive(for callID: UUID) -> ArchiveData {
         guard let fileURL = fileURL(for: callID),
               let data = try? Data(contentsOf: fileURL) else {
-            return ArchiveData(conversation: [])
+            return ArchiveData(mode: .live, conversation: [])
         }
 
         if let payload = try? JSONDecoder().decode(ArchivePayload.self, from: data) {
-            return ArchiveData(conversation: payload.conversation)
+            let mode = payload.mode ?? inferredMode(from: payload.conversation)
+            return ArchiveData(
+                mode: mode,
+                conversation: payload.conversation
+            )
         }
 
         // Backward compatibility with legacy archive format that stored only conversation turns.
         if let conversation = try? JSONDecoder().decode([ConversationTurn].self, from: data) {
-            return ArchiveData(conversation: conversation)
+            return ArchiveData(
+                mode: inferredMode(from: conversation),
+                conversation: conversation
+            )
         }
 
-        return ArchiveData(conversation: [])
+        return ArchiveData(mode: .live, conversation: [])
     }
 
     func saveArchive(
+        mode: CallMode,
         conversation: [ConversationTurn],
         for callID: UUID
     ) throws {
@@ -153,7 +165,7 @@ private final class ConversationArchiveStore: @unchecked Sendable {
             return
         }
 
-        let payload = ArchivePayload(conversation: conversation)
+        let payload = ArchivePayload(mode: mode, conversation: conversation)
         let data = try JSONEncoder().encode(payload)
         try data.write(to: fileURL, options: .atomic)
     }
@@ -182,5 +194,9 @@ private final class ConversationArchiveStore: @unchecked Sendable {
 
     private func fileURL(for callID: UUID) -> URL? {
         directoryURL?.appendingPathComponent("\(callID.uuidString).json")
+    }
+
+    private func inferredMode(from conversation: [ConversationTurn]) -> CallMode {
+        conversation.contains(where: { $0.role == .agent }) ? .agent : .live
     }
 }

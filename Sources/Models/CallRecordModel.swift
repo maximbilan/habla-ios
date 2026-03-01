@@ -32,6 +32,7 @@ final class CallRecordModel {
     }
 
     func toCallRecord(
+        mode: CallMode = .live,
         conversation: [ConversationTurn] = []
     ) -> CallRecord {
         CallRecord(
@@ -40,6 +41,7 @@ final class CallRecordModel {
             startedAt: startedAt,
             duration: duration,
             status: status,
+            mode: mode,
             verifiedFacts: decodeVerifiedFacts(verifiedFactsData),
             conversation: conversation
         )
