@@ -1,94 +1,151 @@
 # Habla iOS
 
-Real-time phone call translation app for the Amazon Nova AI Hackathon. Habla lets callers dial international phone numbers with live bidirectional translation powered by Amazon Nova 2 Sonic.
+iOS client for Habla with two modes:
+
+- **Live Call Mode**: real-time phone-call translation.
+- **Agent Mode**: an AI phone agent that calls on behalf of the user.
+
+The app works with both backends:
+
+- `habla-core` (Amazon Nova 2 Sonic)
+- `habla-core-gemini` (Gemini Live)
+
+## Current Feature Set
+
+- Live call translation over PSTN (Twilio-backed backends).
+- Active call UX improvements:
+  - short neutral pre-answer tone while waiting for remote presence,
+  - clear runtime phase status (`Listening -> Translating -> Speaking`),
+  - local mic and remote activity indicators.
+- Agent mode with:
+  - live transcript,
+  - mid-call instruction injection,
+  - critical confirmation prompts,
+  - verified facts summary.
+- Post-call summary screen with verified facts and conversation timeline.
+- Call history list with persisted summaries/conversations.
+- Caller memory preferences per phone number (local, consent-based).
+- Caller ID management (verify/list/delete/select outbound caller ID).
+- Device-level caller ID isolation via `X-Habla-Device-ID` handled by backend + `habla-accounts`.
+- Backend selection (Nova/Gemini), source/target language selection, and voice gender selection.
 
 ## Architecture
 
 Redux-like unidirectional data flow with SwiftUI:
-- **AppState** — single source of truth (value type)
-- **AppAction** — all possible state changes as an enum
-- **AppReducer** — pure synchronous reducer function
-- **Store** — `@MainActor ObservableObject`, dispatches through middleware then reduces
-- **Middleware** — protocol for side effects (network, audio, WebSocket)
+
+- `AppState`: single source of truth
+- `AppAction`: all state transitions
+- `AppReducer`: pure state reducer
+- `Store`: dispatches actions through middleware, then reduces state
+- `Middleware`: side effects (network, WebSocket, audio, persistence)
+
+Core middlewares:
+
+- `NetworkMiddleware`, `WebSocketMiddleware`, `AudioMiddleware`
+- `AgentNetworkMiddleware`, `AgentWebSocketMiddleware`
+- `CallHistoryMiddleware`, `CallerMemoryMiddleware`, `CallerIdMiddleware`
 
 ## Requirements
 
 - iOS 17.0+
-- Xcode 16.0+
-- Swift 6.0 (strict concurrency)
-- [habla-core](https://github.com/maximbilan/habla-core) backend running
+- Xcode 16+
+- Swift 6
+- One running backend (`habla-core` or `habla-core-gemini`)
 
 ## Setup
 
-1. Clone and run the backend:
-   ```bash
-   cd habla-core
-   pip install -r requirements.txt
-   python -m uvicorn app.main:app --host 0.0.0.0 --port 8000
-   ```
+1. Configure backend URLs:
 
-2. Open `habla-ios.xcodeproj` in Xcode
+```bash
+cp .env.example .env
+```
 
-3. Configure backend URL and optional request auth token generation:
-   - Copy `.env.example` to `.env`
-   - Set:
-     - `HABLA_BACKEND_URL_NOVA` (example: `http://192.168.1.x:8000`)
-     - `HABLA_BACKEND_URL_GEMINI` (example: `http://192.168.1.x:8080`)
-   - Optional legacy fallback: `HABLA_BACKEND_URL`
-   - Optional default backend override: `HABLA_BACKEND_URL_DEFAULT`
-   - Optional but recommended for protected backend routes:
-     - Set `HABLA_SECRET`
-     - Set `HABLA_APP_BUNDLE_ID` (default: `com.maximbilan.habla-ios`)
-   - For Xcode Cloud, set the same environment variables in workflow settings
-   - `ci_scripts/ci_post_clone.sh` generates `Sources/Config/Config.swift` from these values
+Set at least one of:
 
-4. Build and run on a real device (simulator doesn't support microphone)
+- `HABLA_BACKEND_URL_NOVA`
+- `HABLA_BACKEND_URL_GEMINI`
 
-## How It Works
+Optional:
 
-1. User selects a destination country code (or `Any Country (+)`) in the dialer
-2. User selects translation languages, backend service, and voice gender in Settings
-3. User dials a phone number and taps Call
-4. App calls `POST /call` with `source_language`, `target_language`, and `voice_gender`
-5. App opens a WebSocket to `/ws/{call_sid}`
-6. Mic audio (PCM 16-bit, 16kHz, mono) streams to backend via WebSocket
-7. Backend translates source→target via Nova 2 Sonic and sends to phone
-8. Phone audio is translated target→source and streamed back
-9. App plays translated audio through speaker/earpiece
+- `HABLA_BACKEND_URL_DEFAULT`
+- `HABLA_SECRET` and `HABLA_APP_BUNDLE_ID` (if backend request auth is enabled)
 
-When backend auth is enabled (`HABLA_SECRET` configured on backend), iOS sends `Authorization` on REST and iOS WebSocket requests using:
+2. Generate `Sources/Config/Config.swift`:
 
-`HMAC-SHA256(HABLA_SECRET, HABLA_APP_BUNDLE_ID)`
+- Local/manual: run `ci_scripts/ci_post_clone.sh` after setting env vars.
+- Xcode Cloud: set the same env vars in workflow settings.
 
-Supported translation language codes:
+3. Open `habla-ios.xcodeproj` and run.
+
+A real device is recommended for full audio/call testing.
+
+## Backend Contracts Used By iOS
+
+### Live Call Mode
+
+- `POST /call`
+- `POST /call/{sid}/end`
+- `GET /call/{sid}/status`
+- `WS /ws/{call_sid}`
+
+Binary audio format over WS:
+
+- iOS -> backend: PCM16, mono, 16 kHz
+- backend -> iOS: PCM16, mono, 16 kHz
+
+### Agent Mode
+
+- `POST /agent/call`
+- `POST /agent/call/{sid}/end`
+- `GET /agent/call/{sid}/status`
+- `WS /agent/ws/{call_sid}`
+
+### Caller ID
+
+- `POST /caller-id/verify/start`
+- `GET /caller-id/verify/status/{phone_number}`
+- `GET /caller-id/list`
+- `DELETE /caller-id/{sid}`
+
+### Headers
+
+When enabled on backend:
+
+- `Authorization: HMAC_SHA256(HABLA_SECRET, HABLA_APP_BUNDLE_ID)`
+
+For caller-id ownership isolation:
+
+- `X-Habla-Device-ID` (generated by app and persisted on device)
+
+## Supported Translation Languages
 
 - `en-US`, `en-GB`, `en-AU`, `en-IN`
 - `es-US`, `fr-FR`, `de-DE`, `it-IT`, `pt-BR`, `hi-IN`
 
-The backend is the source of truth for supported languages (`GET /translation/languages`).
+## Persistence
 
-## Previous Flow (EN↔ES default)
-
-The app still defaults to `en-US → es-US`, so existing behavior is unchanged until users change the language settings.
+- Call metadata/history: SwiftData (`CallRecordModel`)
+- Conversation archives: app support files via `CallHistoryMiddleware`
+- Caller memory: local JSON cache
+- Device identity: Keychain + UserDefaults fallback
 
 ## Project Structure
 
-```
+```text
 Sources/
-├── App/           — @main entry point
-├── Actions/       — AppAction enum
-├── Core/          — AppState, AppReducer, Store, Middleware protocol
-├── Models/        — CallRecord, AppError, API models, SwiftData model
-├── Middlewares/   — Network, WebSocket, Audio, CallTimer, CallHistory
-├── UI/            — SwiftUI views (Dialer, ActiveCall, Settings, Components)
-└── Extensions/    — Formatting and theme helpers
+  App/
+  Actions/
+  Core/
+  Models/
+  Middlewares/
+  UI/
+  Extensions/
+  Config/
 ```
 
 ## Tech Stack
 
-- Swift 6 with strict concurrency
-- SwiftUI
-- AVAudioEngine (mic capture + playback)
-- URLSession (REST + WebSocket)
-- SwiftData (call history)
-- No third-party dependencies
+- Swift 6 + SwiftUI
+- AVAudioEngine
+- URLSession REST + WebSocket
+- SwiftData
