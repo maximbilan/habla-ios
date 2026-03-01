@@ -30,8 +30,19 @@ struct ActiveCallView: View {
                 case .ringing:
                     Text("Ringing...")
                 case .connected:
-                    Text(state.callDuration.formattedDuration)
-                        .font(.system(size: 18, design: .monospaced))
+                    VStack(spacing: 8) {
+                        Text(state.callDuration.formattedDuration)
+                            .font(.system(size: 18, design: .monospaced))
+                        Text(state.liveCallPhase.title)
+                            .font(.system(size: 14, weight: .semibold, design: .rounded))
+                            .padding(.horizontal, 12)
+                            .padding(.vertical, 6)
+                            .background(
+                                Capsule()
+                                    .fill(statusColor(for: state.liveCallPhase).opacity(0.14))
+                            )
+                            .foregroundColor(statusColor(for: state.liveCallPhase))
+                    }
                 case .ended:
                     Text("Call Ended")
                 case .failed(let reason):
@@ -68,7 +79,8 @@ struct ActiveCallView: View {
             AudioVisualizerView(
                 inputLevel: state.inputAudioLevel,
                 isReceivingAudio: state.isReceivingAudio,
-                isConnected: state.callStatus == .connected
+                isConnected: state.callStatus == .connected,
+                phase: state.liveCallPhase
             )
             .padding(.bottom, 40)
 
@@ -104,6 +116,19 @@ struct ActiveCallView: View {
         }
         .frame(maxWidth: .infinity)
         .background(Color.appBackground)
+    }
+
+    private func statusColor(for phase: LiveCallPhase) -> Color {
+        switch phase {
+        case .listening:
+            return .appTextPrimary
+        case .translating:
+            return .appAgentAccent
+        case .speaking:
+            return .appAccent
+        case .idle:
+            return .appTextSecondary
+        }
     }
 }
 

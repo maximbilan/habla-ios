@@ -39,6 +39,9 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callStatus = .initiating
         state.callError = nil
         state.callDuration = 0
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
         state.activeCriticalConfirmation = nil
         state.verifiedFactsSummary = []
         state.activeScreen = .activeCall
@@ -46,20 +49,36 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .callInitiated(let callSid):
         state.callSid = callSid
         state.callStatus = .connecting
+        state.liveCallPhase = .idle
 
     case .callStatusUpdated(let status):
         state.callStatus = status
+        state.liveCallPhase = phaseForCurrentAudioState(
+            callStatus: status,
+            inputLevel: state.inputAudioLevel,
+            isReceivingAudio: state.isReceivingAudio,
+            previous: state.liveCallPhase
+        )
 
     case .callFailed(let error):
         state.callStatus = .failed(error.localizedDescription)
         state.callError = error
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
 
     case .endCall:
         state.callStatus = .ended
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
 
     case .callEnded:
         state.callStatus = .idle
         state.callSid = nil
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
         state.activeCriticalConfirmation = nil
         if state.activeScreen != .callSummary {
             state.activeScreen = .dialer
@@ -78,6 +97,9 @@ func appReducer(state: inout AppState, action: AppAction) {
         state.callStatus = .initiating
         state.callError = nil
         state.callDuration = 0
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
         state.activeCriticalConfirmation = nil
         state.verifiedFactsSummary = []
         state.agentTranscript = []
@@ -91,6 +113,9 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .agentCallFailed(let error):
         state.callStatus = .failed(error.localizedDescription)
         state.callError = error
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
 
     case .agentTranscriptReceived(let entry):
         if let index = state.agentTranscript.firstIndex(where: { $0.id == entry.id }) {
@@ -130,11 +155,17 @@ func appReducer(state: inout AppState, action: AppAction) {
 
     case .endAgentCall:
         state.callStatus = .ended
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
 
     case .agentCallEnded:
         state.callStatus = .idle
         state.callSid = nil
         state.agentStatus = .idle
+        state.inputAudioLevel = 0
+        state.isReceivingAudio = false
+        state.liveCallPhase = .idle
         state.activeCriticalConfirmation = nil
         if state.activeScreen != .callSummary {
         state.activeScreen = .dialer
@@ -150,9 +181,21 @@ func appReducer(state: inout AppState, action: AppAction) {
 
     case .inputAudioLevelUpdated(let level):
         state.inputAudioLevel = level
+        state.liveCallPhase = phaseForCurrentAudioState(
+            callStatus: state.callStatus,
+            inputLevel: level,
+            isReceivingAudio: state.isReceivingAudio,
+            previous: state.liveCallPhase
+        )
 
     case .receivingAudioChanged(let receiving):
         state.isReceivingAudio = receiving
+        state.liveCallPhase = phaseForCurrentAudioState(
+            callStatus: state.callStatus,
+            inputLevel: state.inputAudioLevel,
+            isReceivingAudio: receiving,
+            previous: state.liveCallPhase
+        )
 
     case .callTimerTick:
         state.callDuration += 1
@@ -385,6 +428,33 @@ private func applyCallerMemoryLanguagePreference(
         UserDefaults.standard.set(replacement, forKey: AppState.translationSourceLanguageKey)
     }
 }
+
+private func phaseForCurrentAudioState(
+    callStatus: CallStatus,
+    inputLevel: Float,
+    isReceivingAudio: Bool,
+    previous: LiveCallPhase
+) -> LiveCallPhase {
+    guard case .connected = callStatus else {
+        return .idle
+    }
+
+    if isReceivingAudio {
+        return .speaking
+    }
+
+    if inputLevel >= liveCallSpeechThreshold {
+        return .listening
+    }
+
+    if previous == .listening || previous == .speaking || previous == .translating {
+        return .translating
+    }
+
+    return .listening
+}
+
+private let liveCallSpeechThreshold: Float = 0.05
 
 private func resolveCountryCode(for rawPhoneNumber: String) -> String? {
     let normalized = rawPhoneNumber
