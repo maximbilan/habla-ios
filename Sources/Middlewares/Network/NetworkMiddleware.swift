@@ -73,6 +73,7 @@ final class NetworkMiddleware: Middleware, @unchecked Sendable {
                     phoneNumber: phoneNumber,
                     duration: duration,
                     status: "completed",
+                    mode: .live,
                     verifiedFacts: verifiedFacts,
                     conversation: conversation
                 )

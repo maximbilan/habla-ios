@@ -17,6 +17,9 @@ struct CallSummaryView: View {
     private var conversation: [ConversationTurn] {
         (call?.conversation ?? []).sorted { $0.timestamp < $1.timestamp }
     }
+    private var isAgentCallSummary: Bool {
+        call?.mode == .agent
+    }
     private var currentCallPhoneKey: String? {
         guard let phone = call?.phoneNumber else { return nil }
         return CallerMemoryKey.normalize(phoneNumber: phone)
@@ -72,21 +75,23 @@ struct CallSummaryView: View {
                         )
                     }
 
-                    VerifiedFactsSummaryCard(
-                        title: "Verified Facts",
-                        facts: facts,
-                        maxItems: max(6, facts.count),
-                        showOnlyVerifiedWhenAvailable: false
-                    )
+                    if isAgentCallSummary {
+                        VerifiedFactsSummaryCard(
+                            title: "Verified Facts",
+                            facts: facts,
+                            maxItems: max(6, facts.count),
+                            showOnlyVerifiedWhenAvailable: false
+                        )
 
-                    if facts.isEmpty {
-                        Text("No critical facts were captured for this call.")
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.appTextSecondary)
-                            .padding(.top, 6)
+                        if facts.isEmpty {
+                            Text("No critical facts were captured for this call.")
+                                .font(.system(size: 14, weight: .medium))
+                                .foregroundColor(.appTextSecondary)
+                                .padding(.top, 6)
+                        }
+
+                        callerMemorySection
                     }
-
-                    callerMemorySection
 
                     if !conversation.isEmpty {
                         Text("Conversation")
