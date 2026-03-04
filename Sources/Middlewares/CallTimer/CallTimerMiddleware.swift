@@ -3,8 +3,6 @@
 //  habla-ios
 //
 
-import Foundation
-
 final class CallTimerMiddleware: Middleware, @unchecked Sendable {
     private var timerTask: Task<Void, Never>?
 

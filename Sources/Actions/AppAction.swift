@@ -3,8 +3,6 @@
 //  habla-ios
 //
 
-import Foundation
-
 enum AppAction: Sendable {
     // Dialer actions
     case dialpadDigitPressed(String)

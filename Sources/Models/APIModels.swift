@@ -3,8 +3,6 @@
 //  habla-ios
 //
 
-import Foundation
-
 struct CallRequest: Codable, Sendable {
     let to: String
     let from: String?

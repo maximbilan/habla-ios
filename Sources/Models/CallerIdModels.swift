@@ -1,5 +1,3 @@
-import Foundation
-
 struct VerifiedCallerId: Equatable, Identifiable, Sendable {
     let id: String
     let phoneNumber: String
