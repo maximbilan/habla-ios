@@ -1,8 +1,5 @@
 import Foundation
 import Security
-#if canImport(UIKit)
-import UIKit
-#endif
 
 enum DeviceIdentity {
     private static let userDefaultsKey = "hablaDeviceId"
@@ -25,11 +22,6 @@ enum DeviceIdentity {
     }
 
     private static func generatedId() -> String {
-#if canImport(UIKit)
-        if let vendorId = UIDevice.current.identifierForVendor?.uuidString, !vendorId.isEmpty {
-            return vendorId
-        }
-#endif
         return UUID().uuidString
     }
 
