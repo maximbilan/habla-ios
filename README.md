@@ -5,6 +5,8 @@ iOS client for Habla with two modes:
 - **Live Call Mode**: real-time phone-call translation.
 - **Agent Mode**: an AI phone agent that calls on behalf of the user.
 
+For the detailed runtime and system design, see [architecture.md](./architecture.md).
+
 ## Current Feature Set
 
 - Live call translation over PSTN (Twilio-backed backends).
@@ -30,7 +32,7 @@ Redux-like unidirectional data flow with SwiftUI:
 
 - `AppState`: single source of truth
 - `AppAction`: all state transitions
-- `AppReducer`: pure state reducer
+- `appReducer`: pure state reducer
 - `Store`: dispatches actions through middleware, then reduces state
 - `Middleware`: side effects (network, WebSocket, audio, persistence)
 
@@ -43,7 +45,7 @@ Core middlewares:
 ## Requirements
 
 - iOS 17.0+
-- Xcode 17+ (Swift 6 toolchain)
+- Xcode 16.2+ (Swift 6 toolchain)
 - Swift 6
 - One running backend (`habla-core` or `habla-core-gemini`)
 
@@ -66,6 +68,7 @@ Optional:
 - `HABLA_BACKEND_URL_DEFAULT`
 - `HABLA_SECRET` and `HABLA_APP_BUNDLE_ID` (if backend request auth is enabled)
 - `.env` is ignored by git; do not commit real secrets.
+- `Sources/Config/Config.swift` is generated and may contain auth material; review before committing.
 
 2. Generate `Sources/Config/Config.swift`:
 
@@ -124,7 +127,7 @@ For caller-id ownership isolation:
 - Call metadata/history: SwiftData (`CallRecordModel`)
 - Conversation archives: app support files via `CallHistoryMiddleware`
 - Caller memory: local JSON cache
-- Device identity: Keychain + UserDefaults fallback
+- Device identity: UserDefaults cache with Keychain-backed persistence
 
 ## Project Structure
 

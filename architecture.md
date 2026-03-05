@@ -1,5 +1,7 @@
 # Habla iOS Architecture
 
+For setup, requirements, and API contract summary, see [README.md](./README.md).
+
 ## 1. Scope
 
 `habla-ios` is the client application for:
@@ -103,11 +105,11 @@ sequenceDiagram
 Agent mode does not stream local microphone audio continuously from iOS. It is control/event oriented:
 
 - Start: `POST /agent/call`
+- End call: `POST /agent/call/{sid}/end`
 - Events: `WS /agent/ws/{call_sid}`
-- Controls from iOS:
+- WebSocket controls from iOS:
   - `instruction`
   - `end_conversation`
-  - `end_call`
 
 Incoming event types include:
 
@@ -142,7 +144,7 @@ Stored in app support as JSON keyed by normalized phone key:
 
 ### 6.3 Device Identity
 
-`DeviceIdentity` is persisted (Keychain-first, fallback support), then sent in header:
+`DeviceIdentity` is persisted with a UserDefaults cache and Keychain backing, then sent in header:
 
 - `X-Habla-Device-ID`
 
@@ -173,8 +175,8 @@ Per-device ownership isolation header:
 ## 9. Failure Handling
 
 - Middleware async tasks convert runtime errors to `AppError` actions.
-- Call-end path saves local summary even when remote hangup fails.
-- WebSocket disconnects fall back to local call termination flow.
+- User-initiated end-call path saves local summary even when remote hangup fails.
+- Live-call WebSocket failures are surfaced via `callFailed`; agent WebSocket failures via `agentWebSocketError`.
 - Persistence failures are intentionally non-blocking for UI responsiveness.
 
 ## 10. Design Constraints and Trade-offs
