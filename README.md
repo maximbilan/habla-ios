@@ -5,11 +5,6 @@ iOS client for Habla with two modes:
 - **Live Call Mode**: real-time phone-call translation.
 - **Agent Mode**: an AI phone agent that calls on behalf of the user.
 
-The app works with both backends:
-
-- `habla-core` (Amazon Nova 2 Sonic)
-- `habla-core-gemini` (Gemini Live)
-
 ## Current Feature Set
 
 - Live call translation over PSTN (Twilio-backed backends).
