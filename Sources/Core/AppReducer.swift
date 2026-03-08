@@ -227,11 +227,6 @@ func appReducer(state: inout AppState, action: AppAction) {
     case .callerMemoryLoaded(let phoneKey, let memory):
         state.activeCallerMemoryPhoneKey = phoneKey
         state.activeCallerMemory = memory
-        applyCallerMemoryLanguagePreference(
-            state: &state,
-            phoneKey: phoneKey,
-            memory: memory
-        )
 
     case .saveCallerMemory:
         break
@@ -398,34 +393,6 @@ private func sortedVerifiedFacts(_ facts: [VerifiedFact]) -> [VerifiedFact] {
         if $0.verified != $1.verified { return $0.verified && !$1.verified }
         if $0.confidence != $1.confidence { return $0.confidence > $1.confidence }
         return $0.occurrences > $1.occurrences
-    }
-}
-
-private func applyCallerMemoryLanguagePreference(
-    state: inout AppState,
-    phoneKey: String,
-    memory: CallerMemory?
-) {
-    guard let memory, memory.consentGranted else { return }
-    guard let currentPhoneKey = CallerMemoryKey.normalize(phoneNumber: state.phoneNumber),
-          currentPhoneKey == phoneKey else {
-        return
-    }
-    guard let preferredLanguage = memory.preferredTargetLanguage,
-          let language = TranslationLanguageCatalog.language(code: preferredLanguage) else {
-        return
-    }
-
-    state.translationTargetLanguage = language.code
-    UserDefaults.standard.set(language.code, forKey: AppState.translationTargetLanguageKey)
-
-    if state.translationSourceLanguage == language.code {
-        let preferred = TranslationLanguageCatalog.defaultSource.code
-        let replacement = preferred == language.code
-            ? TranslationLanguageCatalog.fallbackLanguage(excluding: language.code).code
-            : preferred
-        state.translationSourceLanguage = replacement
-        UserDefaults.standard.set(replacement, forKey: AppState.translationSourceLanguageKey)
     }
 }
 

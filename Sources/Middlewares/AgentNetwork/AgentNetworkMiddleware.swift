@@ -20,7 +20,6 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
             let personalizedPrompt = applyCallerMemory(
                 to: prompt,
                 phoneNumber: phoneNumber,
-                calleeLanguage: calleeLanguage,
                 state: state
             )
             let voiceGender = state.selectedVoiceGender
@@ -100,18 +99,15 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
     }
 
     private func resolveCalleeLanguage(for phoneNumber: String, state: AppState) -> String {
-        guard let memory = matchedCallerMemory(for: phoneNumber, state: state),
-              let preferred = memory.preferredTargetLanguage,
-              let language = TranslationLanguageCatalog.language(code: preferred) else {
-            return state.translationTargetLanguage
+        guard let selected = TranslationLanguageCatalog.language(code: state.translationTargetLanguage) else {
+            return TranslationLanguageCatalog.defaultTarget.code
         }
-        return language.code
+        return selected.code
     }
 
     private func applyCallerMemory(
         to prompt: String,
         phoneNumber: String,
-        calleeLanguage: String,
         state: AppState
     ) -> String {
         guard let memory = matchedCallerMemory(for: phoneNumber, state: state) else {
@@ -120,10 +116,6 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
 
         var contextLines: [String] = []
         contextLines.append("Preferred tone: \(memory.preferredTone.agentInstruction).")
-
-        if let language = TranslationLanguageCatalog.language(code: calleeLanguage) {
-            contextLines.append("Preferred language for this caller: \(language.label).")
-        }
 
         if !memory.priorIssues.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             contextLines.append("Prior issues to remember: \(memory.priorIssues).")
