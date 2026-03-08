@@ -1,7 +1,7 @@
 import XCTest
 @testable import habla_ios
 
-final class AppReducerTranslationSettingsTests: XCTestCase {
+final class AppReducerTranslationSettingsTests: LogicTestCase {
     func testCallerMemoryLoadedDoesNotOverrideTranslationSelections() {
         var state = AppState()
         state.translationSourceLanguage = "en-US"
@@ -29,5 +29,38 @@ final class AppReducerTranslationSettingsTests: XCTestCase {
         XCTAssertEqual(state.translationTargetLanguage, "es-US")
         XCTAssertEqual(state.activeCallerMemoryPhoneKey, "+14155550123")
         XCTAssertEqual(state.activeCallerMemory, memory)
+    }
+
+    func testTranslationSourceLanguageChangedCanonicalizesAliasAndAvoidsTargetConflict() {
+        var state = AppState()
+        state.translationSourceLanguage = "en-US"
+        state.translationTargetLanguage = "es-US"
+
+        appReducer(state: &state, action: .translationSourceLanguageChanged("es"))
+
+        XCTAssertEqual(state.translationSourceLanguage, "es-US")
+        XCTAssertEqual(state.translationTargetLanguage, "en-US")
+    }
+
+    func testTranslationTargetLanguageChangedCanonicalizesAliasAndAvoidsSourceConflict() {
+        var state = AppState()
+        state.translationSourceLanguage = "en-US"
+        state.translationTargetLanguage = "es-US"
+
+        appReducer(state: &state, action: .translationTargetLanguageChanged("en"))
+
+        XCTAssertEqual(state.translationTargetLanguage, "en-US")
+        XCTAssertEqual(state.translationSourceLanguage, "en-GB")
+    }
+
+    func testInvalidTranslationSourceLanguageIsIgnored() {
+        var state = AppState()
+        state.translationSourceLanguage = "en-US"
+        state.translationTargetLanguage = "es-US"
+
+        appReducer(state: &state, action: .translationSourceLanguageChanged("xx-YY"))
+
+        XCTAssertEqual(state.translationSourceLanguage, "en-US")
+        XCTAssertEqual(state.translationTargetLanguage, "es-US")
     }
 }

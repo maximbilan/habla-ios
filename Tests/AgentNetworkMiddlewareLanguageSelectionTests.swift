@@ -1,7 +1,7 @@
 import XCTest
 @testable import habla_ios
 
-final class AgentNetworkMiddlewareLanguageSelectionTests: XCTestCase {
+final class AgentNetworkMiddlewareLanguageSelectionTests: LogicTestCase {
     func testResolveCalleeLanguageUsesSettingsTargetLanguageWhenCallerMemoryDiffers() {
         let middleware = AgentNetworkMiddleware()
         var state = AppState()
@@ -33,5 +33,25 @@ final class AgentNetworkMiddlewareLanguageSelectionTests: XCTestCase {
         let resolved = middleware.resolveCalleeLanguage(for: "+14155550123", state: state)
 
         XCTAssertEqual(resolved, "es-US")
+    }
+
+    func testResolveCalleeLanguageFallsBackToDefaultWhenSettingsValueIsInvalid() {
+        let middleware = AgentNetworkMiddleware()
+        var state = AppState()
+        state.translationTargetLanguage = "xx-YY"
+
+        let resolved = middleware.resolveCalleeLanguage(for: "+14155550123", state: state)
+
+        XCTAssertEqual(resolved, TranslationLanguageCatalog.defaultTarget.code)
+    }
+
+    func testResolveCalleeLanguageNormalizesUnderscoreVariant() {
+        let middleware = AgentNetworkMiddleware()
+        var state = AppState()
+        state.translationTargetLanguage = "pt_BR"
+
+        let resolved = middleware.resolveCalleeLanguage(for: "+14155550123", state: state)
+
+        XCTAssertEqual(resolved, "pt-BR")
     }
 }
