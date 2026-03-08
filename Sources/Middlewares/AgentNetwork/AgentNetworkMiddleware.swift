@@ -98,7 +98,7 @@ final class AgentNetworkMiddleware: Middleware, @unchecked Sendable {
         return state.callerId.verifiedNumbers.first { $0.id == selectedSid }?.phoneNumber
     }
 
-    private func resolveCalleeLanguage(for phoneNumber: String, state: AppState) -> String {
+    func resolveCalleeLanguage(for phoneNumber: String, state: AppState) -> String {
         guard let selected = TranslationLanguageCatalog.language(code: state.translationTargetLanguage) else {
             return TranslationLanguageCatalog.defaultTarget.code
         }
