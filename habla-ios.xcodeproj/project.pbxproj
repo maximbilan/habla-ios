@@ -8,6 +8,7 @@
 
 /* Begin PBXFileReference section */
 		AA000001 /* habla-ios.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "habla-ios.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		AA000014 /* habla-iosTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = "habla-iosTests.xctest"; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -39,10 +40,22 @@
 			path = Config;
 			sourceTree = "<group>";
 		};
+		AA000015 /* Tests */ = {
+			isa = PBXFileSystemSynchronizedRootGroup;
+			path = Tests;
+			sourceTree = "<group>";
+		};
 /* End PBXFileSystemSynchronizedRootGroup section */
 
 /* Begin PBXFrameworksBuildPhase section */
 		AA000003 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000016 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -58,6 +71,7 @@
 				AA000013 /* Config */,
 				AA000012 /* Assets */,
 				AA000011 /* Sources */,
+				AA000015 /* Tests */,
 				AA000005 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -66,6 +80,7 @@
 			isa = PBXGroup;
 			children = (
 				AA000001 /* habla-ios.app */,
+				AA000014 /* habla-iosTests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -95,7 +110,38 @@
 			productReference = AA000001 /* habla-ios.app */;
 			productType = "com.apple.product-type.application";
 		};
+		AA000017 /* habla-iosTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = AA00001B /* Build configuration list for PBXNativeTarget "habla-iosTests" */;
+			buildPhases = (
+				AA000018 /* Sources */,
+				AA000016 /* Frameworks */,
+				AA000019 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				AA00001A /* PBXTargetDependency */,
+			);
+			fileSystemSynchronizedGroups = (
+				AA000015 /* Tests */,
+			);
+			name = "habla-iosTests";
+			productName = "habla-iosTests";
+			productReference = AA000014 /* habla-iosTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
 /* End PBXNativeTarget section */
+
+/* Begin PBXContainerItemProxy section */
+		AA000020 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = AA000009 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = AA000002;
+			remoteInfo = "habla-ios";
+		};
+/* End PBXContainerItemProxy section */
 
 /* Begin PBXProject section */
 		AA000009 /* Project object */ = {
@@ -107,6 +153,10 @@
 				TargetAttributes = {
 					AA000002 = {
 						CreatedOnToolsVersion = 16.2;
+					};
+					AA000017 = {
+						CreatedOnToolsVersion = 16.2;
+						TestTargetID = AA000002;
 					};
 				};
 			};
@@ -125,12 +175,20 @@
 			projectRoot = "";
 			targets = (
 				AA000002 /* habla-ios */,
+				AA000017 /* habla-iosTests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
 		AA000007 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		AA000019 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -147,7 +205,22 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		AA000018 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		AA00001A /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = AA000002 /* habla-ios */;
+			targetProxy = AA000020 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		AA00000B /* Debug */ = {
@@ -221,6 +294,61 @@
 				SWIFT_STRICT_CONCURRENCY = complete;
 				SWIFT_VERSION = 6.0;
 				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Release;
+		};
+		AA00001C /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 828XSMPA74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.maximbilan.habla-iosTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/habla-ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/habla-ios";
+			};
+			name = Debug;
+		};
+		AA00001D /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = 1;
+				DEVELOPMENT_TEAM = 828XSMPA74;
+				GENERATE_INFOPLIST_FILE = YES;
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				MARKETING_VERSION = 1.0.0;
+				PRODUCT_BUNDLE_IDENTIFIER = "com.maximbilan.habla-iosTests";
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SUPPORTED_PLATFORMS = "iphoneos iphonesimulator";
+				SUPPORTS_MACCATALYST = NO;
+				SUPPORTS_MAC_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SUPPORTS_XR_DESIGNED_FOR_IPHONE_IPAD = NO;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_VERSION = 6.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/habla-ios.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/habla-ios";
 			};
 			name = Release;
 		};
@@ -351,6 +479,15 @@
 			buildConfigurations = (
 				AA00000B /* Debug */,
 				AA00000C /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		AA00001B /* Build configuration list for PBXNativeTarget "habla-iosTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				AA00001C /* Debug */,
+				AA00001D /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
