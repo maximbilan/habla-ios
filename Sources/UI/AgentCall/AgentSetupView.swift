@@ -78,14 +78,9 @@ struct AgentSetupView: View {
 
                     if let memory = matchedCallerMemory {
                         VStack(alignment: .leading, spacing: 6) {
-                            Text("Caller memory will be applied")
+                            Text("Caller memory context will be applied")
                                 .font(.system(size: 13, weight: .semibold))
                                 .foregroundColor(.appTextPrimary)
-                            if let language = memory.preferredTargetLanguage {
-                                Text("Language: \(TranslationLanguageCatalog.languageLabelWithEmoji(for: language))")
-                                    .font(.system(size: 12, weight: .medium))
-                                    .foregroundColor(.appTextSecondary)
-                            }
                             Text("Tone: \(memory.preferredTone.title)")
                                 .font(.system(size: 12, weight: .medium))
                                 .foregroundColor(.appTextSecondary)
